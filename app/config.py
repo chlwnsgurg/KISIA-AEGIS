@@ -1,14 +1,72 @@
 import os
+from typing import Optional
 from dotenv import load_dotenv
 
-# .env 파일 로드
 load_dotenv()
 
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_HOST = os.getenv("DB_HOST")
-DB_PORT = os.getenv("DB_PORT")
-DB_NAME = os.getenv("DB_NAME")
 
-ASYNC_DATABASE_URL = f"mysql+asyncmy://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-SYNC_DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}" 
+class Settings:
+    # Database Settings
+    DB_USER: str = os.getenv("DB_USER", "")
+    DB_PASSWORD: str = os.getenv("DB_PASSWORD", "")
+    DB_HOST: str = os.getenv("DB_HOST", "localhost")
+    DB_PORT: str = os.getenv("DB_PORT", "3306")
+    DB_NAME: str = os.getenv("DB_NAME", "")
+    
+    @property
+    def async_database_url(self) -> str:
+        return f"mysql+asyncmy://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+    
+    @property
+    def sync_database_url(self) -> str:
+        return f"mysql+pymysql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+    
+    # JWT Settings
+    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "")
+    JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
+    REFRESH_TOKEN_EXPIRE_DAYS: int = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7"))
+    
+    # AWS S3 Settings
+    AWS_S3_ENDPOINT: Optional[str] = os.getenv("AWS_S3_ENDPOINT")
+    AWS_ACCESS_KEY_ID: Optional[str] = os.getenv("AWS_ACCESS_KEY_ID") 
+    AWS_SECRET_ACCESS_KEY: Optional[str] = os.getenv("AWS_SECRET_ACCESS_KEY")
+    AWS_SIGNATURE_VERSION: str = os.getenv("AWS_SIGNATURE_VERSION", "s3v4")
+    AWS_REGION_NAME: str = os.getenv("AWS_REGION_NAME", "us-east-1")
+    
+    # S3 Bucket Settings
+    BUCKET_NAME: str = os.getenv("BUCKET_NAME", "")
+    IMAGEDIR: str = os.getenv("IMAGEDIR", "images")
+    RECORDDIR: str = os.getenv("RECORDDIR", "records")
+    
+    # File Upload Settings
+    MAX_FILE_SIZE_MB: int = 10
+    ALLOWED_FILE_TYPES: list = [".png"]
+    ALLOWED_CONTENT_TYPES: list = ["image/png"]
+    
+    # Logging
+    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
+
+    @property
+    def s3_url(self) -> str:
+        return f"{self.AWS_S3_ENDPOINT}/{self.BUCKET_NAME}"
+    
+    @property 
+    def s3_image_dir(self) -> str:
+        return f"{self.s3_url}/{self.IMAGEDIR}"
+    
+    @property
+    def s3_record_dir(self) -> str:
+        return f"{self.s3_url}/{self.RECORDDIR}"
+
+
+settings = Settings()
+
+# Legacy exports for backward compatibility
+DB_USER = settings.DB_USER
+DB_PASSWORD = settings.DB_PASSWORD  
+DB_HOST = settings.DB_HOST
+DB_PORT = settings.DB_PORT
+DB_NAME = settings.DB_NAME
+ASYNC_DATABASE_URL = settings.async_database_url
+SYNC_DATABASE_URL = settings.sync_database_url 
