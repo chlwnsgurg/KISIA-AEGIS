@@ -204,3 +204,30 @@ async def get_my_validation_summary(
     offset: int = 0
 ):
     return await validation_service.get_validation_summary(access_token, limit, offset)
+
+@router.get("/test-s3",
+    summary="S3 연결 테스트",
+    description="S3 연결 상태를 테스트합니다.",
+    response_model=BaseResponse
+)
+async def test_s3_connection():
+    from app.services.storage_service import storage_service
+    
+    # 연결 테스트
+    connection_ok = await storage_service.test_s3_connection()
+    
+    # 업로드 테스트
+    upload_ok = False
+    if connection_ok:
+        upload_ok = await storage_service.test_upload()
+    
+    return BaseResponse(
+        success=connection_ok and upload_ok,
+        description="S3 테스트 완료",
+        data=[{
+            "connection": connection_ok,
+            "upload": upload_ok,
+            "endpoint": image_service.storage_service.s3_client._endpoint.host,
+            "bucket": image_service.storage_service.bucket_name
+        }]
+    )

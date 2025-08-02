@@ -89,6 +89,32 @@ class StorageService:
             "sr": f"{settings.s3_image_dir}/{image_id}/sr.png",
             "sr_h": f"{settings.s3_image_dir}/{image_id}/sr_h.png"
         }
+    
+    async def test_s3_connection(self) -> bool:
+        """S3 연결 테스트"""
+        try:
+            # 버킷 존재 확인
+            self.s3_client.head_bucket(Bucket=self.bucket_name)
+            return True
+        except Exception as e:
+            print(f"S3 connection test failed: {str(e)}")
+            return False
+    
+    async def test_upload(self) -> bool:
+        """S3 업로드 테스트"""
+        try:
+            test_content = b"test file content"
+            test_path = "test/test.txt"
+            
+            # 테스트 파일 업로드
+            await self.upload_file(test_content, test_path)
+            
+            # 테스트 파일 삭제
+            self.s3_client.delete_object(Bucket=self.bucket_name, Key=test_path)
+            return True
+        except Exception as e:
+            print(f"S3 upload test failed: {str(e)}")
+            return False
 
 
 storage_service = StorageService()

@@ -100,6 +100,8 @@ class ValidationService:
             
             logger.info(f"Validation record saved with UUID: {validation_uuid}")
             
+
+
             # S3에 검증 입력 이미지 저장
             s3_record_path = self.storage_service.get_record_path(validation_uuid, original_filename)
             

@@ -75,7 +75,8 @@ class ImageService:
         inserted_data = dict(result)
         image_id = inserted_data["id"]
 
-
+        logger.info(f"Image uploaded: {inserted_data}")
+        
         ## AI에 이미지 전송하고 받아오기
         
         
@@ -85,13 +86,14 @@ class ImageService:
         # S3에 다중 경로로 업로드
         s3_paths = self.storage_service.get_image_paths(image_id)
         await self.storage_service.upload_multiple_files(contents, s3_paths)
+        logger.info(f"Files uploaded to S3: {s3_paths}")
         
         return BaseResponse(
             success=True, 
             description="생성 성공", 
             data=[inserted_data]
         )
-    
+        
     async def get_user_images(self, access_token: str, limit: int = 20, offset: int = 0) -> BaseResponse:
         """사용자가 업로드한 이미지 목록 조회"""
         user_id = self.auth_service.get_user_id_from_token(access_token)
@@ -111,7 +113,7 @@ class ImageService:
             )
             
             images = await database.fetch_all(query)
-            
+
             # 응답 데이터 구성
             image_list = []
             for image in images:
