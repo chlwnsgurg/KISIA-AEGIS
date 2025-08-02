@@ -110,5 +110,4 @@ venv.bak/
 ########
 minio/
 
-.claude
-.idea
+.claude/
