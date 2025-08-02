@@ -17,7 +17,10 @@ app = FastAPI(
 # CORS 설정
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Next.js 개발 서버 주소
+    allow_origins=[
+        "http://localhost:3000",  # Next.js 개발 서버
+        "https://aegis.gdgod.com"  # 프로덕션 도메인
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
