@@ -16,8 +16,10 @@ WORKDIR /app
 # 4. 프로젝트의 의존성 정의 파일을 복사합니다.
 COPY pyproject.toml uv.lock ./
 
-# 5. uv를 사용하여 의존성을 설치합니다.
-RUN uv sync --frozen --no-dev
+# 5. uv를 사용하여 의존성을 설치합니다. (캐시 활용)
+ENV UV_CACHE_DIR=/opt/uv-cache
+RUN --mount=type=cache,target=/opt/uv-cache \
+    uv sync --frozen --no-dev
 
 # 6. 나머지 프로젝트 파일들을 복사합니다.
 COPY . .
