@@ -22,22 +22,23 @@ class Settings:
         return f"mysql+pymysql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
     
     # JWT Settings
-    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "")
-    JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
-    REFRESH_TOKEN_EXPIRE_DAYS: int = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7"))
+    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY")
+    JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM")
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
+    REFRESH_TOKEN_EXPIRE_DAYS: int = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS"))
     
     # AWS S3 Settings
     AWS_S3_ENDPOINT: Optional[str] = os.getenv("AWS_S3_ENDPOINT")
     AWS_ACCESS_KEY_ID: Optional[str] = os.getenv("AWS_ACCESS_KEY_ID") 
     AWS_SECRET_ACCESS_KEY: Optional[str] = os.getenv("AWS_SECRET_ACCESS_KEY")
-    AWS_SIGNATURE_VERSION: str = os.getenv("AWS_SIGNATURE_VERSION", "s3v4")
-    AWS_REGION_NAME: str = os.getenv("AWS_REGION_NAME", "us-east-1")
+    AWS_SIGNATURE_VERSION: str = os.getenv("AWS_SIGNATURE_VERSION")
+    AWS_REGION_NAME: str = os.getenv("AWS_REGION_NAME")
     
     # S3 Bucket Settings
-    BUCKET_NAME: str = os.getenv("BUCKET_NAME", "")
-    IMAGEDIR: str = os.getenv("IMAGEDIR", "images")
-    RECORDDIR: str = os.getenv("RECORDDIR", "records")
+    BUCKET_NAME: str = os.getenv("BUCKET_NAME")
+    IMAGEDIR: str = os.getenv("IMAGEDIR")
+    RECORDDIR: str = os.getenv("RECORDDIR")
+
     
     # File Upload Settings
     MAX_FILE_SIZE_MB: int = 10
