@@ -107,7 +107,7 @@ class ImageService:
             query = (
                 Image.__table__.select()
                 .where(Image.user_id == int(user_id))
-                .order_by(Image.time_created.desc())
+                .order_by(Image.id.desc())
                 .limit(limit)
                 .offset(offset)
             )
