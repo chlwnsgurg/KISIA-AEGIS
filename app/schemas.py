@@ -47,7 +47,6 @@ class AIValidationResponse(BaseModel):
     has_watermark: bool = Field(..., description="워터마크 존재 여부")
     detected_watermark_image_id: Optional[int] = Field(None, description="감지된 워터마크 이미지 ID")
     modification_rate: Optional[float] = Field(None, description="변조율 (0.0 ~ 1.0)")
-    confidence_score: Optional[float] = Field(None, description="신뢰도 점수")
     visualization_image_base64: Optional[str] = Field(None, description="변조 시각화 이미지 (Base64)")
 
 
@@ -56,7 +55,6 @@ class ValidationResponse(BaseModel):
     has_watermark: bool
     detected_watermark_image_id: Optional[int]
     modification_rate: Optional[float]
-    confidence_score: Optional[float]
     input_filename: str
     validation_time: Optional[str]
     input_image_base64: str

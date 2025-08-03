@@ -42,7 +42,7 @@ class ValidationService:
                 detected_id = existing_image["id"]
         
         modification_rate = round(random.uniform(0.0, 0.3), 3) if has_watermark else None
-        confidence_score = round(random.uniform(0.7, 0.95), 3)
+        # confidence_score = round(random.uniform(0.7, 0.95), 3)
         
         # 가짜 시각화 이미지 생성 (실제로는 AI 서버에서 변조 부분을 하이라이트한 이미지 반환)
         visualization_image = None
@@ -55,7 +55,7 @@ class ValidationService:
             has_watermark=has_watermark,
             detected_watermark_image_id=detected_id,
             modification_rate=modification_rate,
-            confidence_score=confidence_score,
+            # confidence_score=confidence_score,
             visualization_image_base64=visualization_image
         )
     
@@ -78,11 +78,12 @@ class ValidationService:
             # 입력 이미지를 Base64로 인코딩
             input_image_base64 = base64.b64encode(contents).decode('utf-8')
             
+
             # AI 서버 시뮬레이션 (실제로는 외부 AI 서버에 HTTP 요청)
             ai_response = await self.simulate_ai_validation(contents, original_filename)
             
             
-            logger.info(f"AI validation result: watermark={ai_response.has_watermark}, confidence={ai_response.confidence_score}")
+            logger.info(f"AI validation result: watermark={ai_response.has_watermark}, modification_rate={ai_response.modification_rate}, detected_id={ai_response.detected_watermark_image_id}")
             
             # ValidationRecord에 결과 저장
             validation_uuid = str(uuid.uuid4())
@@ -95,13 +96,12 @@ class ValidationService:
                 detected_watermark_image_id=ai_response.detected_watermark_image_id,
                 modification_rate=ai_response.modification_rate
             ).returning(ValidationRecord)
-            
+
+
             validation_record = await database.fetch_one(query)
             
             logger.info(f"Validation record saved with UUID: {validation_uuid}")
             
-
-
             # S3에 검증 입력 이미지 저장
             s3_record_path = self.storage_service.get_record_path(validation_uuid, original_filename)
             
@@ -118,7 +118,6 @@ class ValidationService:
                 "has_watermark": ai_response.has_watermark,
                 "detected_watermark_image_id": ai_response.detected_watermark_image_id,
                 "modification_rate": ai_response.modification_rate,
-                "confidence_score": ai_response.confidence_score,
                 "input_filename": original_filename,
                 "validation_time": validation_record["time_created"].isoformat() if validation_record else None,
                 "input_image_base64": input_image_base64,
