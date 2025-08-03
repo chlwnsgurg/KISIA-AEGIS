@@ -7,11 +7,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { Download, Search, Shield } from "lucide-react"
+import { Download, Search, Shield, ChevronLeft, ChevronRight } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
-import { Pagination, PaginationInfo } from "@/components/pagination"
 import { usePagination } from "@/hooks/usePagination"
 import { apiClient } from "@/lib/api"
 import { getImageUrl, downloadImage } from "@/lib/image-utils"
@@ -190,11 +189,9 @@ export default function MyImagesPage() {
                     검색 결과: <span className="font-semibold">{filteredImages.length}</span>개 (페이지 내 {images.length}개 중)
                   </p>
                 ) : (
-                  <PaginationInfo
-                    currentPage={pagination.currentPage}
-                    pageSize={pagination.pageSize}
-                    totalItems={pagination.totalItems}
-                  />
+                  <p className="text-sm text-gray-600">
+                    전체 <span className="font-semibold">{pagination.totalItems}</span>개의 이미지
+                  </p>
                 )}
               </div>
               {searchTerm.trim() && (
@@ -282,15 +279,67 @@ export default function MyImagesPage() {
             </div>
           )}
 
-          {/* Pagination */}
+          {/* Pagination - Dashboard Style */}
           {!loading && images.length > 0 && !searchTerm.trim() && pagination.totalPages > 1 && (
-            <div className="mt-8 mb-8 flex justify-center">
-              <Pagination
-                currentPage={pagination.currentPage}
-                totalPages={pagination.totalPages}
-                onPageChange={pagination.goToPage}
-                showQuickJumper={pagination.totalPages > 10}
-              />
+            <div className="flex flex-col sm:flex-row items-center justify-between mt-8 space-y-3 sm:space-y-0">
+              <div className="text-xs sm:text-sm text-gray-500 text-center sm:text-left">
+                {((pagination.currentPage - 1) * pagination.pageSize) + 1}-{Math.min(pagination.currentPage * pagination.pageSize, pagination.totalItems)} / {pagination.totalItems}
+              </div>
+              <div className="flex items-center space-x-1 sm:space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={pagination.prevPage}
+                  disabled={!pagination.hasPrevPage || loading}
+                  className="px-2 sm:px-3"
+                >
+                  <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline ml-1">이전</span>
+                </Button>
+                
+                <div className="flex items-center space-x-1">
+                  {Array.from({ length: Math.min(3, pagination.totalPages) }, (_, i) => {
+                    const pageNum = i + 1;
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={pagination.currentPage === pageNum ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => pagination.goToPage(pageNum)}
+                        disabled={loading}
+                        className="w-8 h-8 p-0 text-xs sm:text-sm"
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  })}
+                  {pagination.totalPages > 3 && (
+                    <>
+                      <span className="px-1 text-gray-400 text-xs">...</span>
+                      <Button
+                        variant={pagination.currentPage === pagination.totalPages ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => pagination.goToPage(pagination.totalPages)}
+                        disabled={loading}
+                        className="w-8 h-8 p-0 text-xs sm:text-sm"
+                      >
+                        {pagination.totalPages}
+                      </Button>
+                    </>
+                  )}
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={pagination.nextPage}
+                  disabled={!pagination.hasNextPage || loading}
+                  className="px-2 sm:px-3"
+                >
+                  <span className="hidden sm:inline mr-1">다음</span>
+                  <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
+                </Button>
+              </div>
             </div>
           )}
 
