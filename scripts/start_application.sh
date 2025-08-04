@@ -6,12 +6,19 @@ echo "Starting Aegis backend application..."
 # Change to deploy directory
 cd /home/ubuntu/deploy
 
-# Set default environment variables if not provided
-export AWS_REGION=${AWS_REGION:-ap-northeast-2}
-export AWS_ACCOUNT_ID=${AWS_ACCOUNT_ID:-425315269246}
-export ECR_REPOSITORY_NAME=${ECR_REPOSITORY_NAME:-aegis1-test}
-export ECR_REPOSITORY_ID=${ECR_REPOSITORY_ID:-$AWS_ACCOUNT_ID}
-export ECR_REGION=${ECR_REGION:-$AWS_REGION}
+# Debug: Print environment variables
+echo "=== Environment Variables Debug ==="
+echo "AWS_ACCOUNT_ID: $AWS_ACCOUNT_ID"
+echo "ECR_REPOSITORY_NAME: $ECR_REPOSITORY_NAME"
+echo "DB_HOST: $DB_HOST"
+echo "ACCESS_TOKEN_EXPIRE_MINUTES: $ACCESS_TOKEN_EXPIRE_MINUTES"
+echo "JWT_SECRET_KEY: ${JWT_SECRET_KEY:0:10}..." 
+echo "==================================="
+
+# Use environment variables from GitHub Secrets
+export ECR_REPOSITORY_ID=${AWS_ACCOUNT_ID}
+export ECR_REGION=${AWS_REGION}
+export ECR_IMAGE_TAG=latest
 
 # Set executable permissions for scripts
 chmod +x ecr-login.sh
@@ -20,9 +27,12 @@ chmod +x ecr-login.sh
 ./ecr-login.sh
 
 # Pull latest image from ECR
-ECR_IMAGE_URL="$ECR_REPOSITORY_ID.dkr.ecr.$ECR_REGION.amazonaws.com/$ECR_REPOSITORY_NAME:latest"
+ECR_IMAGE_URL="$ECR_REPOSITORY_ID.dkr.ecr.$ECR_REGION.amazonaws.com/$ECR_REPOSITORY_NAME:$ECR_IMAGE_TAG"
 echo "Pulling image: $ECR_IMAGE_URL"
 docker pull $ECR_IMAGE_URL
+
+# Force remove old containers and images
+docker compose --profile app down --rmi all 2>/dev/null || true
 
 # Start application with docker-compose
 docker compose --profile app up -d

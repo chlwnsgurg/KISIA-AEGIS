@@ -18,7 +18,7 @@ services:
       - ssl-init
 
   backend:
-    image: 425315269246.dkr.ecr.ap-northeast-2.amazonaws.com/aegis1-test:latest
+    image: ${ECR_REPOSITORY_ID}.dkr.ecr.${ECR_REGION}.amazonaws.com/${ECR_REPOSITORY_NAME}:${ECR_IMAGE_TAG}
     container_name: aegis-backend
     environment:
       - TZ=Asia/Seoul
