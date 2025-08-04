@@ -16,7 +16,7 @@ services:
       --non-interactive
     profiles:
       - ssl-init
-
+  
   backend:
     image: ${ECR_REPOSITORY_ID}.dkr.ecr.${ECR_REGION}.amazonaws.com/${ECR_REPOSITORY_NAME}:${ECR_IMAGE_TAG}
     container_name: aegis-backend
@@ -29,15 +29,14 @@ services:
       - DB_NAME=${DB_NAME}
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      - AWS_REGION_NAME=${AWS_REGION_NAME}
-      - BUCKET_NAME=${S3_DEPLOYMENT_BUCKET}
+      - AWS_REGION_NAME=${AWS_REGION}
+      - BUCKET_NAME=${BUCKET_NAME}
       - IMAGEDIR=${IMAGEDIR}
       - RECORDDIR=${RECORDDIR}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - JWT_ALGORITHM=${JWT_ALGORITHM}
       - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES}
       - REFRESH_TOKEN_EXPIRE_DAYS=${REFRESH_TOKEN_EXPIRE_DAYS}
-      - S3_DEPLOYMENT_BUCKET=${S3_DEPLOYMENT_BUCKET}
     expose:
       - "8000"
     networks:
