@@ -33,6 +33,12 @@ jobs:
       if: github.event_name != 'pull_request'
       uses: aws-actions/amazon-ecr-login@v2
         
+    - name: Debug environment variables
+      run: |
+        echo "REGISTRY: ${{ env.REGISTRY }}"
+        echo "IMAGE_NAME: ${{ env.IMAGE_NAME }}"
+        echo "Full image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
+        
     - name: Extract metadata
       id: meta
       uses: docker/metadata-action@v5
