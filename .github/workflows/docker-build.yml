@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 env:
-  REGISTRY: ${{ secrets.ECR_REPOSITORY_ID }}.dkr.ecr.${{ secrets.ECR_REGION }}.amazonaws.com
+  REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
   IMAGE_NAME: ${{ secrets.ECR_REPOSITORY_NAME }}
 
 jobs:
@@ -25,9 +25,9 @@ jobs:
       if: github.event_name != 'pull_request'
       uses: aws-actions/configure-aws-credentials@v4
       with:
-        aws-access-key-id: ${{ secrets.ECR_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.ECR_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.ECR_REGION }}
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
         
     - name: Log in to Amazon ECR
       if: github.event_name != 'pull_request'
@@ -61,13 +61,27 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
         
+    - name: Create deployment package
+      if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+      run: |
+        mkdir -p deployment-package
+        cp -r appspec.yml scripts/ deployment-package/
+        cd deployment-package
+        zip -r ../deployment-${{ github.sha }}.zip .
+        
+    - name: Upload to S3
+      if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+      run: |
+        aws s3 cp deployment-${{ github.sha }}.zip s3://${{ secrets.S3_DEPLOYMENT_BUCKET }}/aegis-backend/deployment-${{ github.sha }}.zip
+        
     - name: Deploy notification
       if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
       run: |
         echo "🚀 New image pushed: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
+        echo "📦 Deployment package uploaded: s3://${{ secrets.S3_DEPLOYMENT_BUCKET }}/aegis-backend/deployment-${{ github.sha }}.zip"
         # 원격 서버에 웹훅 또는 알림을 보낼 수 있습니다
         if [ -n "${{ secrets.DEPLOY_WEBHOOK_URL }}" ]; then
           curl -X POST "${{ secrets.DEPLOY_WEBHOOK_URL }}" \
             -H "Content-Type: application/json" \
-            -d '{"image": "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest", "sha": "${{ github.sha }}"}'
+            -d '{"image": "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest", "deployment_package": "s3://${{ secrets.S3_DEPLOYMENT_BUCKET }}/aegis-backend/deployment-${{ github.sha }}.zip", "sha": "${{ github.sha }}"}'
         fi
