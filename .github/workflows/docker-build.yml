@@ -100,8 +100,8 @@ jobs:
       if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
       run: |
         aws deploy create-deployment \
-          --application-name aegis-backend \
-          --deployment-group-name aegis-prod \
+          --application-name ${{ secrets.CODEDEPLOY_APPLICATION_NAME }} \
+          --deployment-group-name ${{ secrets.CODEDEPLOY_DEPLOYMENT_GROUP }} \
           --s3-location bucket=${{ secrets.S3_DEPLOYMENT_BUCKET }},key=aegis-backend/deployment-${{ github.sha }}.zip,bundleType=zip \
           --region ${{ secrets.AWS_REGION_NAME }}
         
@@ -110,11 +110,10 @@ jobs:
       run: |
         echo "🚀 New image pushed: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
         echo "📦 Deployment package uploaded: s3://${{ secrets.S3_DEPLOYMENT_BUCKET }}/aegis-backend/deployment-${{ github.sha }}.zip"
-        echo "🚀 CodeDeploy deployment started for aegis-backend"
+        echo "🚀 CodeDeploy deployment started for ${{ secrets.CODEDEPLOY_APPLICATION_NAME }}"
         # 원격 서버에 웹훅 또는 알림을 보낼 수 있습니다
         if [ -n "${{ secrets.DEPLOY_WEBHOOK_URL }}" ]; then
           curl -X POST "${{ secrets.DEPLOY_WEBHOOK_URL }}" \
             -H "Content-Type: application/json" \
             -d '{"image": "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest", "deployment_package": "s3://${{ secrets.S3_DEPLOYMENT_BUCKET }}/aegis-backend/deployment-${{ github.sha }}.zip", "sha": "${{ github.sha }}"}'
         fi
-        
