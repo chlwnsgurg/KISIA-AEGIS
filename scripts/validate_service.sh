@@ -9,6 +9,10 @@ sleep 30
 # Check if backend container is running
 if ! docker ps | grep -q aegis-backend; then
     echo "ERROR: Backend container is not running"
+    echo "=== Docker container status ==="
+    docker ps -a
+    echo "=== Docker compose logs ==="
+    cd /home/ubuntu/deploy && docker compose --profile app logs --tail=50
     exit 1
 fi
 

@@ -38,6 +38,23 @@ docker pull $ECR_IMAGE_URL
 docker compose --profile app down --rmi all 2>/dev/null || true
 
 # Start application with docker-compose
+echo "Starting docker-compose services..."
 docker compose --profile app up -d
 
-echo "Application started successfully"
+# Wait a moment and check status
+sleep 10
+echo "=== Container status after startup ==="
+docker ps -a
+
+# Show logs if containers failed to start
+if ! docker ps | grep -q aegis-backend; then
+    echo "=== Backend container logs ==="
+    docker compose --profile app logs backend
+fi
+
+if ! docker ps | grep -q aegis-nginx; then
+    echo "=== Nginx container logs ==="
+    docker compose --profile app logs nginx
+fi
+
+echo "Application startup completed"
