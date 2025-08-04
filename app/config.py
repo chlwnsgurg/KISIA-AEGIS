@@ -1,22 +1,14 @@
 import os
 from typing import Optional
 
-# .env 파일이 있으면 로드, 없으면 시스템 환경변수 사용
-try:
-    from dotenv import load_dotenv
-    load_dotenv()
-except ImportError:
-    # dotenv가 없어도 시스템 환경변수는 사용 가능
-    pass
-
 
 class Settings:
     # Database Settings
-    DB_USER: str = os.getenv("DB_USER", "root")
-    DB_PASSWORD: str = os.getenv("DB_PASSWORD")
-    DB_HOST: str = os.getenv("DB_HOST", "localhost")
-    DB_PORT: str = os.getenv("DB_PORT", "3306")
-    DB_NAME: str = os.getenv("DB_NAME", "aegis")
+    DB_USER: str = os.getenv("DB_USER") or "root"
+    DB_PASSWORD: str = os.getenv("DB_PASSWORD") or "password"
+    DB_HOST: str = os.getenv("DB_HOST") or "localhost"
+    DB_PORT: str = os.getenv("DB_PORT") or "3306"
+    DB_NAME: str = os.getenv("DB_NAME") or "aegis"
     
     def __init__(self):
         # 디버깅용 환경변수 출력
@@ -36,20 +28,20 @@ class Settings:
         return f"mysql+pymysql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
     
     # JWT Settings
-    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY")
-    JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "120"))
-    REFRESH_TOKEN_EXPIRE_DAYS: int = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7"))
+    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY") or "default-secret-key"
+    JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM") or "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES") or "120")
+    REFRESH_TOKEN_EXPIRE_DAYS: int = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS") or "7")
     
     # AWS S3 Settings
     AWS_ACCESS_KEY_ID: Optional[str] = os.getenv("AWS_ACCESS_KEY_ID") 
     AWS_SECRET_ACCESS_KEY: Optional[str] = os.getenv("AWS_SECRET_ACCESS_KEY")
-    AWS_REGION_NAME: str = os.getenv("AWS_REGION_NAME", "ap-northeast-2")
+    AWS_REGION_NAME: str = os.getenv("AWS_REGION_NAME") or "ap-northeast-2"
     
     # S3 Bucket Settings
-    BUCKET_NAME: str = os.getenv("BUCKET_NAME")
-    IMAGEDIR: str = os.getenv("IMAGEDIR", "image")
-    RECORDDIR: str = os.getenv("RECORDDIR", "record")
+    BUCKET_NAME: str = os.getenv("BUCKET_NAME") or "default-bucket"
+    IMAGEDIR: str = os.getenv("IMAGEDIR") or "image"
+    RECORDDIR: str = os.getenv("RECORDDIR") or "record"
 
     
     # File Upload Settings
