@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 env:
-  REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+  REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION_NAME }}.amazonaws.com
   IMAGE_NAME: ${{ secrets.ECR_REPOSITORY_NAME }}
 
 jobs:
@@ -27,7 +27,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region-name: ${{ secrets.AWS_REGION_NAME }}
+        aws-region: ${{ secrets.AWS_REGION_NAME }}
         
     - name: Log in to Amazon ECR
       if: github.event_name != 'pull_request'
@@ -71,7 +71,7 @@ jobs:
         cat > deployment-package/deploy/.env << EOF
         AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_REGION=${{ secrets.AWS_REGION }}
+        AWS_REGION_NAME=${{ secrets.AWS_REGION_NAME }}
         AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }}
         ECR_REPOSITORY_NAME=${{ secrets.ECR_REPOSITORY_NAME }}
         DB_USER=${{ secrets.DB_USER }}
@@ -103,7 +103,7 @@ jobs:
           --application-name aegis-backend \
           --deployment-group-name aegis-prod \
           --s3-location bucket=${{ secrets.S3_DEPLOYMENT_BUCKET }},key=aegis-backend/deployment-${{ github.sha }}.zip,bundleType=zip \
-          --region ${{ secrets.AWS_REGION }}
+          --region ${{ secrets.AWS_REGION_NAME }}
         
     - name: Deploy notification
       if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'

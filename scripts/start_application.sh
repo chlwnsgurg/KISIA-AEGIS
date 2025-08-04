@@ -26,7 +26,7 @@ echo "==================================="
 
 # Use environment variables from GitHub Secrets
 export ECR_REPOSITORY_ID=${AWS_ACCOUNT_ID}
-export ECR_REGION=${AWS_REGION}
+export ECR_REGION=${AWS_REGION_NAME}
 export ECR_IMAGE_TAG=latest
 
 # Set executable permissions for scripts
