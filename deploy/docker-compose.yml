@@ -24,7 +24,7 @@ services:
       - TZ=Asia/Seoul
       - DB_USER=${DB_USER:-root}
       - DB_PASSWORD=${DB_PASSWORD}
-      - DB_HOST=${DB_HOST}
+      - DB_HOST=${DB_HOST:-database-2.croik44kgmhz.ap-northeast-2.rds.amazonaws.com}
       - DB_PORT=${DB_PORT:-3306}
       - DB_NAME=${DB_NAME:-aegis}
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}

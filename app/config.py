@@ -18,6 +18,15 @@ class Settings:
     DB_PORT: str = os.getenv("DB_PORT", "3306")
     DB_NAME: str = os.getenv("DB_NAME", "aegis")
     
+    def __init__(self):
+        # 디버깅용 환경변수 출력
+        print(f"=== Environment Variables Debug ===")
+        print(f"DB_HOST: {self.DB_HOST}")
+        print(f"DB_USER: {self.DB_USER}")
+        print(f"DB_PORT: {self.DB_PORT}")
+        print(f"DB_NAME: {self.DB_NAME}")
+        print(f"=====================================")
+    
     @property
     def async_database_url(self) -> str:
         return f"mysql+asyncmy://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
