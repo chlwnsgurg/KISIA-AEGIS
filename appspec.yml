@@ -1,5 +1,9 @@
 version: 0.0
 os: linux
+files:
+  - source: deploy/
+    destination: /home/ubuntu/deploy
+    overwrite: yes
 hooks:
   BeforeInstall:
     - location: scripts/stop_application.sh

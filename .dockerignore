@@ -122,3 +122,4 @@ deploy.sh
 .github/
 
 .secrets
+.claude

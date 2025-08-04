@@ -1,13 +1,15 @@
 #!/bin/bash
 
-# Stop the running Docker container
+# Stop the running Docker containers using deploy setup
 echo "Stopping existing Aegis backend application..."
 
-# Stop and remove existing container
-docker stop aegis-backend || true
-docker rm aegis-backend || true
+# Change to deploy directory
+cd /home/ubuntu/deploy || exit 1
 
-# Remove old images (keep latest 3)
-docker images | grep aegis-backend | tail -n +4 | awk '{print $3}' | xargs -r docker rmi || true
+# Stop containers using docker-compose
+docker compose --profile app down
+
+# Clean up unused images
+docker image prune -f
 
 echo "Application stopped successfully"
