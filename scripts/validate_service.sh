@@ -4,7 +4,8 @@
 echo "Validating Aegis backend service..."
 
 # Wait for the service to start
-sleep 30
+echo "Waiting 60 seconds for containers to fully start..."
+sleep 60
 
 # Check if backend container is running
 if ! docker ps | grep -q aegis-backend; then

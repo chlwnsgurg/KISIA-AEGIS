@@ -12,7 +12,13 @@ if [ -f ".env" ]; then
     echo "=== .env file contents ==="
     cat .env
     echo "=========================="
+    set -a  # automatically export all variables
     source .env
+    set +a
+    echo "=== Environment check after loading .env ==="
+    echo "AWS_ACCESS_KEY_ID is set: ${AWS_ACCESS_KEY_ID:+YES}"
+    echo "AWS_SECRET_ACCESS_KEY is set: ${AWS_SECRET_ACCESS_KEY:+YES}"
+    echo "=========================="
 else
     echo "ERROR: .env file not found"
     exit 1
@@ -22,9 +28,14 @@ fi
 echo "=== Environment Variables Debug ==="
 echo "AWS_ACCOUNT_ID: $AWS_ACCOUNT_ID"
 echo "ECR_REPOSITORY_NAME: $ECR_REPOSITORY_NAME"
+echo "ECR_REPOSITORY_ID: $ECR_REPOSITORY_ID"
+echo "ECR_REGION: $ECR_REGION"
+echo "ECR_IMAGE_TAG: $ECR_IMAGE_TAG"
 echo "DB_HOST: $DB_HOST"
 echo "S3_DEPLOYMENT_BUCKET: $S3_DEPLOYMENT_BUCKET"
+echo "BUCKET_NAME: $BUCKET_NAME"
 echo "AWS_REGION_NAME: $AWS_REGION_NAME"
+echo "AWS_REGION: $AWS_REGION"
 echo "ACCESS_TOKEN_EXPIRE_MINUTES: $ACCESS_TOKEN_EXPIRE_MINUTES"
 echo "JWT_SECRET_KEY: ${JWT_SECRET_KEY:0:10}..." 
 echo "==================================="
@@ -33,6 +44,12 @@ echo "==================================="
 export ECR_REPOSITORY_ID=${AWS_ACCOUNT_ID}
 export ECR_REGION=${AWS_REGION_NAME}
 export ECR_IMAGE_TAG=${ECR_IMAGE_TAG:-latest}
+
+echo "=== Final export values ==="
+echo "ECR_REPOSITORY_ID: $ECR_REPOSITORY_ID"
+echo "ECR_REGION: $ECR_REGION"  
+echo "ECR_IMAGE_TAG: $ECR_IMAGE_TAG"
+echo "=========================="
 
 # Set executable permissions for scripts
 chmod +x ecr-login.sh
@@ -60,7 +77,11 @@ docker ps -a
 # Show logs if containers failed to start
 if ! docker ps | grep -q aegis-backend; then
     echo "=== Backend container logs ==="
-    docker compose --profile app logs backend
+    docker compose --profile app logs backend --tail=100
+    echo "=== All containers status ==="
+    docker compose --profile app ps -a
+    echo "=== Image pull check ==="
+    docker images | grep "$ECR_REPOSITORY_NAME" || echo "No images found for $ECR_REPOSITORY_NAME"
 else
     echo "=== Backend container environment check ==="
     docker exec aegis-backend printenv | grep -E "(BUCKET_NAME|AWS_REGION_NAME)" || echo "Environment variables not found in container"
@@ -68,7 +89,7 @@ fi
 
 if ! docker ps | grep -q aegis-nginx; then
     echo "=== Nginx container logs ==="
-    docker compose --profile app logs nginx
+    docker compose --profile app logs nginx --tail=50
 fi
 
 echo "Application startup completed"
