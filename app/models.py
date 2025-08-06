@@ -1,9 +1,15 @@
 from datetime import datetime
+from enum import Enum
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Boolean, Float
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Boolean, Float, Enum as SQLEnum
 from sqlalchemy.sql import func
 
 Base = declarative_base()
+
+class ProtectionAlgorithm(Enum):
+    EditGuard = "EditGuard"
+    OmniGuard = "OmniGuard"
+    RobustWide = "RobustWide"
 
 class User(Base):
     __tablename__ = "user"
@@ -12,6 +18,7 @@ class User(Base):
     email = Column(String(255), nullable=False, unique=True)
     password = Column(String(255), nullable=False)
     time_created = Column(DateTime(timezone=True), server_default=func.now())
+    
 
 class Image(Base):
     __tablename__ = "image"
@@ -19,6 +26,7 @@ class Image(Base):
     user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
     filename = Column(String(255), nullable=False)
     copyright = Column(String(255), nullable=True)
+    protection_algorithm = Column(SQLEnum(ProtectionAlgorithm), nullable=True)
     time_created = Column(DateTime(timezone=True), server_default=func.now())
 
 class ValidationRecord(Base):
