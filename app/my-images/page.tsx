@@ -77,22 +77,16 @@ export default function MyImagesPage() {
       setLoading(true)
       const response = await apiClient.getUserImages(pagination.pageSize, pagination.offset)
       
-      if (response.success && response.data && response.data.length > 0) {
-        const imageData = response.data[0].images || []
-        const paginationData = response.data[0].pagination
+      if (response.success && response.data && Array.isArray(response.data)) {
+        const imageData = response.data
         
         setImages(imageData)
         
-        // 백엔드에서 total 정보를 제공하는 경우
-        if (paginationData?.total_count !== undefined) {
-          pagination.setTotalItems(paginationData.total_count)
-        } else {
-          // total 정보가 없는 경우 현재 페이지 데이터 개수로 추정
-          const estimatedTotal = imageData.length < pagination.pageSize 
-            ? pagination.offset + imageData.length
-            : pagination.offset + imageData.length + 1
-          pagination.setTotalItems(estimatedTotal)
-        }
+        // 페이지네이션 정보가 별도로 없으므로 현재 데이터로 추정
+        const estimatedTotal = imageData.length < pagination.pageSize 
+          ? pagination.offset + imageData.length
+          : pagination.offset + imageData.length + 1
+        pagination.setTotalItems(estimatedTotal)
       } else {
         // 데이터가 없는 경우
         setImages([])
@@ -305,8 +299,8 @@ export default function MyImagesPage() {
                               variant="outline" 
                               size="sm" 
                               className="bg-transparent"
-                              onClick={() => handleDownloadDirect(image.s3_paths?.sr || '', `sr_${image.filename}`)}
-                              disabled={!image.s3_paths?.sr}
+                              onClick={() => handleDownloadDirect(image.s3_paths?.sr_h || '', `sr_h_${image.filename}`)}
+                              disabled={!image.s3_paths?.sr_h}
                             >
                               <Download className="h-4 w-4 mr-1" />
                               워터마크

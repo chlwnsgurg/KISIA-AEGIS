@@ -19,10 +19,23 @@ export function getImageUrl(imagePath: string | undefined): string {
 }
 
 /**
- * 백엔드에서 직접 이미지 다운로드
+ * 이미지 다운로드 (S3 URL 지원)
  */
 export async function downloadImage(imagePath: string, filename: string): Promise<void> {
   try {
+    // S3 URL인 경우 직접 다운로드 링크 생성
+    if (imagePath.startsWith('https://') || imagePath.startsWith('http://')) {
+      const link = document.createElement('a');
+      link.href = imagePath;
+      link.download = filename;
+      link.target = '_blank'; // 새 탭에서 열기
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      return;
+    }
+
+    // 백엔드 API 이미지인 경우 기존 로직 사용
     const imageUrl = getImageUrl(imagePath);
     const response = await fetch(imageUrl);
     
