@@ -14,7 +14,7 @@ export default function HomePage() {
       <section className="hero-gradient text-white pt-24 pb-16">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            AI가 만든 가짜 이미지,
+            위변조된 가짜 이미지,
             <br />
             AEGIS로 판별하세요
           </h1>
