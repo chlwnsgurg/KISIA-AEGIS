@@ -105,23 +105,51 @@ class ImageService:
             data=[inserted_data]
         )
         
-    async def get_user_images(self, access_token: str, limit: int = 20, offset: int = 0) -> BaseResponse:
-        """사용자가 업로드한 이미지 목록 조회"""
+    async def get_user_images(self, access_token: str, limit: int = 20, offset: int = 0, filename: str = None, copyright: str = None, protection_algorithm: str = None) -> BaseResponse:
+        """사용자가 업로드한 이미지 목록 조회 (검색 기능 포함)"""
         user_id = self.auth_service.get_user_id_from_token(access_token)
         
-        logger.info(f"User {user_id} requested their uploaded images (limit={limit}, offset={offset})")
+        search_params = {
+            "filename": filename,
+            "copyright": copyright, 
+            "protection_algorithm": protection_algorithm
+        }
+        active_filters = {k: v for k, v in search_params.items() if v}
         
-        
+        logger.info(f"User {user_id} requested their uploaded images (limit={limit}, offset={offset}) with filters: {active_filters}")
 
         try:
-            # 사용자가 업로드한 이미지 목록 조회
+            # 기본 쿼리 시작
             query = (
                 Image.__table__.select()
                 .where(Image.user_id == int(user_id))
-                .order_by(Image.id.desc())
-                .limit(limit)
-                .offset(offset)
             )
+            
+            # 검색 조건 추가
+            if filename:
+                query = query.where(Image.filename.ilike(f"%{filename}%"))
+            if copyright:
+                query = query.where(Image.copyright.ilike(f"%{copyright}%"))
+            if protection_algorithm:
+                query = query.where(Image.protection_algorithm == protection_algorithm)
+            
+            # 정렬, 페이징 적용
+            query = query.order_by(Image.id.desc()).limit(limit).offset(offset)
+            
+            # 총 개수 조회 (페이징 정보용)
+            count_query = (
+                sqlalchemy.select(sqlalchemy.func.count(Image.id))
+                .where(Image.user_id == int(user_id))
+            )
+            if filename:
+                count_query = count_query.where(Image.filename.ilike(f"%{filename}%"))
+            if copyright:
+                count_query = count_query.where(Image.copyright.ilike(f"%{copyright}%"))
+            if protection_algorithm:
+                count_query = count_query.where(Image.protection_algorithm == protection_algorithm)
+            
+            total_count_result = await database.fetch_one(count_query)
+            total_count = total_count_result[0] if total_count_result else 0
             
             images = await database.fetch_all(query)
 
@@ -138,12 +166,25 @@ class ImageService:
                 }
                 image_list.append(image_data)
             
-            logger.info(f"Retrieved {len(image_list)} images for user {user_id}")
+            # 페이징 정보 계산
+            has_more = (offset + len(image_list)) < total_count
+            
+            logger.info(f"Retrieved {len(image_list)}/{total_count} images for user {user_id} with filters: {active_filters}")
             
             return BaseResponse(
                 success=True,
-                description=f"{len(image_list)}개의 업로드된 이미지를 조회했습니다.",
-                data=image_list
+                description=f"{len(image_list)}개의 업로드된 이미지를 조회했습니다. (전체: {total_count}개)",
+                data={
+                    "images": image_list,
+                    "pagination": {
+                        "total_count": total_count,
+                        "limit": limit,
+                        "offset": offset,
+                        "has_more": has_more,
+                        "current_count": len(image_list)
+                    },
+                    "filters": active_filters
+                }
             )
             
         except Exception as e:

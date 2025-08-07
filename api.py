@@ -178,7 +178,7 @@ async def get_validation_records_by_user_id(
 
 @router.get("/images",
     summary="내가 업로드한 이미지 목록 조회",
-    description="현재 사용자가 업로드한 이미지 목록을 조회합니다.",
+    description="현재 사용자가 업로드한 이미지 목록을 조회합니다. 검색 조건을 통해 필터링이 가능합니다.",
     response_model=BaseResponse,
     responses={
         200: {"description": "업로드한 이미지 목록 조회 성공"},
@@ -188,9 +188,12 @@ async def get_validation_records_by_user_id(
 async def get_my_images(
     access_token: str = Security(APIKeyHeader(name='access-token')),
     limit: int = 20,
-    offset: int = 0
+    offset: int = 0,
+    filename: str = None,
+    copyright: str = None,
+    protection_algorithm: str = None
 ):
-    return await image_service.get_user_images(access_token, limit, offset)
+    return await image_service.get_user_images(access_token, limit, offset, filename, copyright, protection_algorithm)
 
 @router.get("/my-validation-summary",
     summary="내 위변조 검증 요약 정보 조회",
