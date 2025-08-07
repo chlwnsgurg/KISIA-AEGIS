@@ -21,11 +21,11 @@ interface ImageRecord {
   copyright: string
   upload_time: string
   protection_algorithm?: string
-  s3_paths: {
-    gt: string
-    lr: string
-    sr: string
-    sr_h: string
+  s3_paths?: {
+    gt?: string
+    lr?: string
+    sr?: string
+    sr_h?: string
   }
 }
 
@@ -77,19 +77,26 @@ export default function MyImagesPage() {
       setLoading(true)
       const response = await apiClient.getUserImages(pagination.pageSize, pagination.offset)
       
-      if (response.success && response.data) {
-        setImages(response.data)
+      if (response.success && response.data && response.data.length > 0) {
+        const imageData = response.data[0].images || []
+        const paginationData = response.data[0].pagination
+        
+        setImages(imageData)
         
         // 백엔드에서 total 정보를 제공하는 경우
-        if (response.pagination?.total) {
-          pagination.setTotalItems(response.pagination.total)
+        if (paginationData?.total_count !== undefined) {
+          pagination.setTotalItems(paginationData.total_count)
         } else {
           // total 정보가 없는 경우 현재 페이지 데이터 개수로 추정
-          const estimatedTotal = response.data.length < pagination.pageSize 
-            ? pagination.offset + response.data.length
-            : pagination.offset + response.data.length + 1
+          const estimatedTotal = imageData.length < pagination.pageSize 
+            ? pagination.offset + imageData.length
+            : pagination.offset + imageData.length + 1
           pagination.setTotalItems(estimatedTotal)
         }
+      } else {
+        // 데이터가 없는 경우
+        setImages([])
+        pagination.setTotalItems(0)
       }
     } catch (error: any) {
       console.error('이미지 로드 실패:', error)
@@ -220,11 +227,20 @@ export default function MyImagesPage() {
                     <CardContent className="p-4 h-full flex flex-col">
                       {/* 이미지 - 고정 크기 */}
                       <div className="aspect-square mb-4 overflow-hidden rounded-lg bg-gray-100 flex-shrink-0">
-                        <img
-                          src={getImageUrl(image.s3_paths.gt)}
-                          alt={image.filename}
-                          className="w-full h-full object-cover"
-                        />
+                        {image.s3_paths?.gt ? (
+                          <img
+                            src={getImageUrl(image.s3_paths.gt)}
+                            alt={image.filename}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-400">
+                            <div className="text-center">
+                              <Shield className="h-8 w-8 mx-auto mb-2" />
+                              <p className="text-sm">이미지 없음</p>
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       {/* 컨텐츠 - 나머지 공간 차지 */}
@@ -279,7 +295,8 @@ export default function MyImagesPage() {
                               variant="outline" 
                               size="sm" 
                               className="bg-transparent"
-                              onClick={() => handleDownloadDirect(image.s3_paths.gt, `gt_${image.filename}`)}
+                              onClick={() => handleDownloadDirect(image.s3_paths?.gt || '', `gt_${image.filename}`)}
+                              disabled={!image.s3_paths?.gt}
                             >
                               <Download className="h-4 w-4 mr-1" />
                               원본
@@ -288,7 +305,8 @@ export default function MyImagesPage() {
                               variant="outline" 
                               size="sm" 
                               className="bg-transparent"
-                              onClick={() => handleDownloadDirect(image.s3_paths.sr, `sr_${image.filename}`)}
+                              onClick={() => handleDownloadDirect(image.s3_paths?.sr || '', `sr_${image.filename}`)}
+                              disabled={!image.s3_paths?.sr}
                             >
                               <Download className="h-4 w-4 mr-1" />
                               워터마크
