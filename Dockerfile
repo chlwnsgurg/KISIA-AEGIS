@@ -18,8 +18,10 @@ COPY pyproject.toml uv.lock ./
 
 # 5. uv를 사용하여 의존성을 설치합니다. (캐시 활용)
 ENV UV_CACHE_DIR=/opt/uv-cache
+ENV UV_HTTP_TIMEOUT=600
+ENV UV_CONCURRENT_DOWNLOADS=1
 RUN --mount=type=cache,target=/opt/uv-cache \
-    uv sync --frozen --no-dev
+    uv sync --frozen --no-dev --verbose
 
 # 6. 나머지 프로젝트 파일들을 복사합니다.
 COPY . .
