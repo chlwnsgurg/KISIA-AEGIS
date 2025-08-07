@@ -49,11 +49,9 @@ class StorageService:
             )
     
     def get_image_paths(self, image_id: int) -> List[str]:
-        """이미지 ID를 기반으로 S3 경로들 생성"""
+        """이미지 ID를 기반으로 S3 경로들 생성 (GT, SRH만 사용)"""
         return [
             f"image/{image_id}/gt.png",
-            f"image/{image_id}/lr.png", 
-            f"image/{image_id}/sr.png",
             f"image/{image_id}/sr_h.png"
         ]
     
@@ -62,11 +60,9 @@ class StorageService:
         return f"record/{validation_uuid}/{filename}"
     
     def get_image_urls(self, image_id: int) -> dict:
-        """이미지 URL들 생성"""
+        """이미지 URL들 생성 (GT, SRH만 사용)"""
         return {
             "gt": f"{settings.s3_image_dir}/{image_id}/gt.png",
-            "lr": f"{settings.s3_image_dir}/{image_id}/lr.png",
-            "sr": f"{settings.s3_image_dir}/{image_id}/sr.png",
             "sr_h": f"{settings.s3_image_dir}/{image_id}/sr_h.png"
         }
     

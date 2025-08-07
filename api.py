@@ -93,8 +93,8 @@ async def upload(
     return await image_service.upload_image(file, copyright, protection_algorithm, access_token)
 
 @router.post("/validate",
-    summary="이미지 검증",
-    description="업로드된 이미지를 AI 서버를 통해 검증합니다.",
+    summary="이미지 위변조 검증",
+    description="업로드된 이미지의 위변조 여부를 AI 서버를 통해 검증합니다.",
     response_model=BaseResponse,
     responses={
         200: {"description": "이미지 검증 성공"},
@@ -103,11 +103,10 @@ async def upload(
     }
 )
 async def validate(
-    validation_algorithm: str = Form(..., description="검증 알고리즘 (EditGuard, OmniGuard, RobustWide)"),
     file: UploadFile = File(..., description="검증할 PNG 파일"),
     access_token: str = Security(APIKeyHeader(name='access-token'))
 ):
-    return await validation_service.validate_image(file, validation_algorithm, access_token)
+    return await image_service.verify_image(file, access_token)
 
 
 
@@ -178,7 +177,7 @@ async def get_validation_records_by_user_id(
 
 @router.get("/images",
     summary="내가 업로드한 이미지 목록 조회",
-    description="현재 사용자가 업로드한 이미지 목록을 조회합니다. 검색 조건을 통해 필터링이 가능합니다.",
+    description="현재 사용자가 업로드한 이미지 목록을 조회합니다.",
     response_model=BaseResponse,
     responses={
         200: {"description": "업로드한 이미지 목록 조회 성공"},
@@ -188,12 +187,9 @@ async def get_validation_records_by_user_id(
 async def get_my_images(
     access_token: str = Security(APIKeyHeader(name='access-token')),
     limit: int = 20,
-    offset: int = 0,
-    filename: str = None,
-    copyright: str = None,
-    protection_algorithm: str = None
+    offset: int = 0
 ):
-    return await image_service.get_user_images(access_token, limit, offset, filename, copyright, protection_algorithm)
+    return await image_service.get_user_images(access_token, limit, offset)
 
 @router.get("/my-validation-summary",
     summary="내 위변조 검증 요약 정보 조회",

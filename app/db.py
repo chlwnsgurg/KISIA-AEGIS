@@ -10,3 +10,4 @@ metadata = MetaData()
 engine = create_engine(SYNC_DATABASE_URL)
 # Base.metadata.drop_all(bind=engine)      # 모든 테이블 삭제
 Base.metadata.create_all(bind=engine)    # 모든 테이블 새로 생성
+

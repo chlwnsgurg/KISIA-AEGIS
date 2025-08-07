@@ -1,8 +1,10 @@
 import logging
 from typing import List, Dict, Any
+import base64
 
 from fastapi import HTTPException, status, UploadFile
 import sqlalchemy
+import httpx
 
 from app.config import settings
 from app.db import database
@@ -70,6 +72,9 @@ class ImageService:
         original_filename = self.clean_filename(file.filename)
         logger.info(f"Original filename: {file.filename} -> Cleaned: {original_filename}")
         
+        # 파일 내용 읽기
+        file_content = await file.read()
+        
         # DB에 이미지 정보 저장
         query = (
             sqlalchemy.insert(Image)
@@ -86,70 +91,100 @@ class ImageService:
         inserted_data = dict(result)
         image_id = inserted_data["id"]
 
-        logger.info(f"Image uploaded: {inserted_data}")
+        logger.info(f"Image uploaded to DB: {inserted_data}")
         
-        ## AI에 이미지 전송하고 받아오기
-        
-        
-        # 파일 내용 읽기
-        contents = await file.read()
-        
-        # S3에 다중 경로로 업로드
-        s3_paths = self.storage_service.get_image_paths(image_id)
-        await self.storage_service.upload_multiple_files(contents, s3_paths)
-        logger.info(f"Files uploaded to S3: {s3_paths}")
+        try:
+            # 임시: AI 서버가 수정될 때까지 원본 이미지 사용
+            # watermarked_image_content = await self._send_to_ai_server(file_content, image_id)
+            watermarked_image_content = file_content
+            
+            # S3에 원본(GT)과 워터마크(SRH) 이미지 업로드
+            gt_path = f"image/{image_id}/gt.png"
+            srh_path = f"image/{image_id}/sr_h.png"
+            
+            await self.storage_service.upload_file(file_content, gt_path)
+            await self.storage_service.upload_file(watermarked_image_content, srh_path)
+            logger.info(f"Files uploaded to S3: GT={gt_path}, SRH={srh_path}")
+            
+        except Exception as e:
+            # AI 서버 또는 S3 업로드 실패 시 DB에서 해당 레코드 삭제
+            logger.error(f"AI 서버 또는 S3 업로드 실패: {str(e)}")
+            delete_query = sqlalchemy.delete(Image).where(Image.id == image_id)
+            await database.execute(delete_query)
+            logger.info(f"Rolled back DB record for image_id: {image_id}")
+            raise
         
         return BaseResponse(
             success=True, 
             description="생성 성공", 
             data=[inserted_data]
         )
+    
+    async def _send_to_ai_server(self, image_content: bytes, image_id:int) -> bytes:
+        """AI 서버에 이미지를 전송하고 워터마크된 이미지를 받아온다"""
+        try:
+            # 이미지를 base64로 인코딩
+            image_b64 = base64.b64encode(image_content).decode('utf-8')
+            
+            # AI 서버로 전송할 데이터 구성
+            payload = {
+                "image": image_b64,
+                "bit_input": f"{image_id:032b}"
+            }
+            
+            # AI 서버에 요청
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                response = await client.post(
+                    f"{settings.AI_IP}/upload",
+                    json=payload
+                )
+                
+                if response.status_code != 200:
+                    raise HTTPException(
+                        status_code=status.HTTP_502_BAD_GATEWAY,
+                        detail=f"AI 서버 오류: {response.text}"
+                    )
+                
+                response_data = response.json()
+                
+                if not response_data.get("success"):
+                    raise HTTPException(
+                        status_code=status.HTTP_502_BAD_GATEWAY,
+                        detail="AI 서버에서 워터마크 처리 실패"
+                    )
+                
+                # base64 디코딩하여 바이너리 데이터 반환
+                watermarked_b64 = response_data["data"]["lr"]
+                return base64.b64decode(watermarked_b64)
+                
+        except httpx.TimeoutException:
+            logger.error("AI 서버 요청 타임아웃")
+            raise HTTPException(
+                status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+                detail="AI 서버 응답 시간 초과"
+            )
+        except Exception as e:
+            logger.error(f"AI 서버 통신 오류: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"AI 서버 통신 중 오류가 발생했습니다: {str(e)}"
+            )
         
-    async def get_user_images(self, access_token: str, limit: int = 20, offset: int = 0, filename: str = None, copyright: str = None, protection_algorithm: str = None) -> BaseResponse:
-        """사용자가 업로드한 이미지 목록 조회 (검색 기능 포함)"""
+    async def get_user_images(self, access_token: str, limit: int = 20, offset: int = 0) -> BaseResponse:
+        """사용자가 업로드한 이미지 목록 조회"""
         user_id = self.auth_service.get_user_id_from_token(access_token)
         
-        search_params = {
-            "filename": filename,
-            "copyright": copyright, 
-            "protection_algorithm": protection_algorithm
-        }
-        active_filters = {k: v for k, v in search_params.items() if v}
+        logger.info(f"User {user_id} requested their uploaded images (limit={limit}, offset={offset})")
         
-        logger.info(f"User {user_id} requested their uploaded images (limit={limit}, offset={offset}) with filters: {active_filters}")
-
         try:
-            # 기본 쿼리 시작
+            # 사용자가 업로드한 이미지 목록 조회
             query = (
                 Image.__table__.select()
                 .where(Image.user_id == int(user_id))
+                .order_by(Image.id.desc())
+                .limit(limit)
+                .offset(offset)
             )
-            
-            # 검색 조건 추가
-            if filename:
-                query = query.where(Image.filename.ilike(f"%{filename}%"))
-            if copyright:
-                query = query.where(Image.copyright.ilike(f"%{copyright}%"))
-            if protection_algorithm:
-                query = query.where(Image.protection_algorithm == protection_algorithm)
-            
-            # 정렬, 페이징 적용
-            query = query.order_by(Image.id.desc()).limit(limit).offset(offset)
-            
-            # 총 개수 조회 (페이징 정보용)
-            count_query = (
-                sqlalchemy.select(sqlalchemy.func.count(Image.id))
-                .where(Image.user_id == int(user_id))
-            )
-            if filename:
-                count_query = count_query.where(Image.filename.ilike(f"%{filename}%"))
-            if copyright:
-                count_query = count_query.where(Image.copyright.ilike(f"%{copyright}%"))
-            if protection_algorithm:
-                count_query = count_query.where(Image.protection_algorithm == protection_algorithm)
-            
-            total_count_result = await database.fetch_one(count_query)
-            total_count = total_count_result[0] if total_count_result else 0
             
             images = await database.fetch_all(query)
 
@@ -166,25 +201,12 @@ class ImageService:
                 }
                 image_list.append(image_data)
             
-            # 페이징 정보 계산
-            has_more = (offset + len(image_list)) < total_count
-            
-            logger.info(f"Retrieved {len(image_list)}/{total_count} images for user {user_id} with filters: {active_filters}")
+            logger.info(f"Retrieved {len(image_list)} images for user {user_id}")
             
             return BaseResponse(
                 success=True,
-                description=f"{len(image_list)}개의 업로드된 이미지를 조회했습니다. (전체: {total_count}개)",
-                data=[{
-                    "images": image_list,
-                    "pagination": {
-                        "total_count": total_count,
-                        "limit": limit,
-                        "offset": offset,
-                        "has_more": has_more,
-                        "current_count": len(image_list)
-                    },
-                    "filters": active_filters
-                }]
+                description=f"{len(image_list)}개의 업로드된 이미지를 조회했습니다.",
+                data=image_list
             )
             
         except Exception as e:
@@ -192,6 +214,84 @@ class ImageService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"이미지 목록 조회 중 오류가 발생했습니다: {str(e)}"
+            )
+    
+    async def verify_image(self, file: UploadFile, access_token: str) -> BaseResponse:
+        """이미지 위변조 검증"""
+        user_id = self.auth_service.get_user_id_from_token(access_token)
+        self.validate_file(file)
+        
+        logger.info(f"User {user_id} requested image verification")
+        
+        try:
+            # 파일 내용 읽기
+            file_content = await file.read()
+            
+            # AI 서버로 검증 요청
+            verification_result = await self._send_to_ai_server_for_verification(file_content)
+            
+            return BaseResponse(
+                success=True,
+                description="이미지 위변조 검증이 완료되었습니다.",
+                data=[verification_result]
+            )
+            
+        except Exception as e:
+            logger.error(f"Image verification failed for user {user_id}: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"이미지 검증 중 오류가 발생했습니다: {str(e)}"
+            )
+    
+    async def _send_to_ai_server_for_verification(self, image_content: bytes) -> dict:
+        """AI 서버에 검증 요청을 보낸다"""
+        try:
+            # 이미지를 base64로 인코딩
+            image_b64 = base64.b64encode(image_content).decode('utf-8')
+            
+            # AI 서버로 전송할 데이터 구성
+            payload = {
+                "sr_h": image_b64
+            }
+            
+            # AI 서버에 요청
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                response = await client.post(
+                    f"{settings.AI_IP}/verify",
+                    json=payload
+                )
+                
+                if response.status_code != 200:
+                    raise HTTPException(
+                        status_code=status.HTTP_502_BAD_GATEWAY,
+                        detail=f"AI 서버 오류: {response.text}"
+                    )
+                
+                response_data = response.json()
+                
+                if not response_data.get("success"):
+                    raise HTTPException(
+                        status_code=status.HTTP_502_BAD_GATEWAY,
+                        detail="AI 서버에서 검증 처리 실패"
+                    )
+                
+                return {
+                    "tampering_rate": response_data["data"]["acc"],  # 변조률
+                    "tampered_regions_mask": response_data["data"]["mask"],  # 변조된 부분 (base64 이미지)
+                    "original_image_id": response_data["data"]["recovered_bit"]  # 원본 이미지 ID
+                }
+                
+        except httpx.TimeoutException:
+            logger.error("AI 서버 검증 요청 타임아웃")
+            raise HTTPException(
+                status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+                detail="AI 서버 응답 시간 초과"
+            )
+        except Exception as e:
+            logger.error(f"AI 서버 검증 통신 오류: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"AI 서버 통신 중 오류가 발생했습니다: {str(e)}"
             )
 
 

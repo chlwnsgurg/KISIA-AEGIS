@@ -74,6 +74,9 @@ class Settings:
     
     # Logging
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
+    
+    # AI Server Settings
+    AI_IP: str = os.getenv("AI_IP")
 
     @property
     def s3_url(self) -> str:
