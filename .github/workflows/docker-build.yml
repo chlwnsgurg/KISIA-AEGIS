@@ -8,7 +8,7 @@ on:
 
 env:
   PRIVATE_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION_NAME }}.amazonaws.com
-  PUBLIC_REGISTRY: ${{ secrets.ECR_PUBLIC_REPOSITORY_URL }}
+  PUBLIC_REGISTRY_URL: ${{ secrets.ECR_PUBLIC_REPOSITORY_URL }}
   IMAGE_NAME: ${{ secrets.ECR_REPOSITORY_NAME }}
 
 jobs:
@@ -43,7 +43,7 @@ jobs:
     - name: Debug environment variables
       run: |
         echo "PRIVATE_REGISTRY: ${{ env.PRIVATE_REGISTRY }}"
-        echo "PUBLIC_REGISTRY: ${{ env.PUBLIC_REGISTRY }}"
+        echo "PUBLIC_REGISTRY_URL: ${{ env.PUBLIC_REGISTRY_URL }}"
         echo "IMAGE_NAME: ${{ env.IMAGE_NAME }}"
         
     - name: Extract metadata
@@ -52,7 +52,7 @@ jobs:
       with:
         images: |
           ${{ env.PRIVATE_REGISTRY }}/${{ env.IMAGE_NAME }}
-          ${{ env.PUBLIC_REGISTRY }}
+          ${{ env.PUBLIC_REGISTRY_URL }}
         tags: |
           type=raw,value=latest
           
@@ -127,12 +127,12 @@ jobs:
       if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
       run: |
         echo "🚀 New image pushed to private: ${{ env.PRIVATE_REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
-        echo "🚀 New image pushed to public: ${{ env.PUBLIC_REGISTRY }}:latest"
+        echo "🚀 New image pushed to public: ${{ env.PUBLIC_REGISTRY_URL }}:latest"
         echo "📦 Deployment package uploaded: s3://${{ secrets.S3_DEPLOYMENT_BUCKET }}/${{ secrets.ECR_REPOSITORY_NAME }}/deployment-${{ github.sha }}.zip"
         echo "🚀 CodeDeploy deployment started for ${{ secrets.CODEDEPLOY_APPLICATION_NAME }}"
         # 원격 서버에 웹훅 또는 알림을 보낼 수 있습니다
         if [ -n "${{ secrets.DEPLOY_WEBHOOK_URL }}" ]; then
           curl -X POST "${{ secrets.DEPLOY_WEBHOOK_URL }}" \
             -H "Content-Type: application/json" \
-            -d '{"private_image": "${{ env.PRIVATE_REGISTRY }}/${{ env.IMAGE_NAME }}:latest", "public_image": "${{ env.PUBLIC_REGISTRY }}:latest", "deployment_package": "s3://${{ secrets.S3_DEPLOYMENT_BUCKET }}/${{ secrets.ECR_REPOSITORY_NAME }}/deployment-${{ github.sha }}.zip", "sha": "${{ github.sha }}"}'
+            -d '{"private_image": "${{ env.PRIVATE_REGISTRY }}/${{ env.IMAGE_NAME }}:latest", "public_image": "${{ env.PUBLIC_REGISTRY_URL }}:latest", "deployment_package": "s3://${{ secrets.S3_DEPLOYMENT_BUCKET }}/${{ secrets.ECR_REPOSITORY_NAME }}/deployment-${{ github.sha }}.zip", "sha": "${{ github.sha }}"}'
         fi
