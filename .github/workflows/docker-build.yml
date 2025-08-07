@@ -47,6 +47,12 @@ jobs:
         tags: |
           type=raw,value=latest
           
+    - name: Debug push condition
+      run: |
+        echo "Event name: ${{ github.event_name }}"
+        echo "Ref: ${{ github.ref }}"
+        echo "Should push: ${{ github.event_name != 'pull_request' }}"
+        
     - name: Build and push Docker image
       timeout-minutes: 30
       uses: docker/build-push-action@v5
