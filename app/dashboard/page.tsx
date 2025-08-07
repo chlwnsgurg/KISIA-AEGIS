@@ -26,6 +26,7 @@ interface ValidationRecord {
   detected_watermark_image_id: number | null;
   modification_rate: number | null;
   validation_time: string;
+  validation_algorithm?: string;
   s3_validation_image_url: string;
 }
 

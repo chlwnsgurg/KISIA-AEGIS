@@ -20,6 +20,7 @@ interface ImageRecord {
   filename: string
   copyright: string
   upload_time: string
+  protection_algorithm?: string
   s3_paths: {
     gt: string
     lr: string
@@ -215,9 +216,10 @@ export default function MyImagesPage() {
                 const uploadDate = new Date(image.upload_time).toLocaleDateString('ko-KR')
                 
                 return (
-                  <Card key={image.image_id} className="hover:shadow-lg transition-shadow">
-                    <CardContent className="p-4">
-                      <div className="aspect-square mb-4 overflow-hidden rounded-lg bg-gray-100">
+                  <Card key={image.image_id} className="hover:shadow-lg transition-shadow h-full">
+                    <CardContent className="p-4 h-full flex flex-col">
+                      {/* 이미지 - 고정 크기 */}
+                      <div className="aspect-square mb-4 overflow-hidden rounded-lg bg-gray-100 flex-shrink-0">
                         <img
                           src={getImageUrl(image.s3_paths.gt)}
                           alt={image.filename}
@@ -225,54 +227,73 @@ export default function MyImagesPage() {
                         />
                       </div>
 
-                      <div className="space-y-3">
-                        <div>
+                      {/* 컨텐츠 - 나머지 공간 차지 */}
+                      <div className="flex-1 flex flex-col space-y-3">
+                        <div className="flex-shrink-0">
                           <p className="text-xs text-gray-400 font-mono mb-1">
                             ID: {image.image_id}
                           </p>
-                          <h3 className="font-medium text-gray-900 truncate">{image.filename || '파일명 없음'}</h3>
+                          <h3 className="font-medium text-gray-900 truncate" title={image.filename}>
+                            {image.filename || '파일명 없음'}
+                          </h3>
                           <p className="text-sm text-gray-500">
                             {uploadDate}
                           </p>
                         </div>
+
+                        {/* 알고리즘 정보 표시 */}
+                        {image.protection_algorithm && (
+                          <div className="bg-purple-50 border border-purple-200 rounded-lg p-2">
+                            <div className="flex items-center space-x-2">
+                              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                              <div>
+                                <p className="text-xs font-medium text-purple-800">보호 알고리즘</p>
+                                <p className="text-sm text-purple-700">{image.protection_algorithm}</p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                         
-                        {/* 저작권 정보 항상 표시 */}
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        {/* 저작권 정보 */}
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex-shrink-0">
                           <div className="flex items-start space-x-2">
                             <Shield className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
                             <div className="min-w-0 flex-1">
                               <p className="text-xs font-medium text-blue-800 mb-1">저작권 정보</p>
-                              <p className="text-sm text-blue-700 break-words">
+                              <p className="text-sm text-blue-700 break-words line-clamp-2" title={image.copyright}>
                                 {image.copyright || "저작권 정보가 설정되지 않았습니다"}
                               </p>
                             </div>
                           </div>
                         </div>
 
-                        <div className="flex items-center justify-between">
-                          <Badge className="bg-green-100 text-green-800">보호됨</Badge>
-                          <Badge variant="outline">원본 보호</Badge>
-                        </div>
+                        {/* 하단 고정 영역 */}
+                        <div className="flex-shrink-0 space-y-3 mt-auto">
+                          <div className="flex items-center justify-between">
+                            <Badge className="bg-green-100 text-green-800">보호됨</Badge>
+                            <Badge variant="outline">원본 보호</Badge>
+                          </div>
 
-                        <div className="grid grid-cols-2 gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="bg-transparent"
-                            onClick={() => handleDownloadDirect(image.s3_paths.gt, `gt_${image.filename}`)}
-                          >
-                            <Download className="h-4 w-4 mr-1" />
-                            원본
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="bg-transparent"
-                            onClick={() => handleDownloadDirect(image.s3_paths.sr, `sr_${image.filename}`)}
-                          >
-                            <Download className="h-4 w-4 mr-1" />
-                            워터마크
-                          </Button>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="bg-transparent"
+                              onClick={() => handleDownloadDirect(image.s3_paths.gt, `gt_${image.filename}`)}
+                            >
+                              <Download className="h-4 w-4 mr-1" />
+                              원본
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="bg-transparent"
+                              onClick={() => handleDownloadDirect(image.s3_paths.sr, `sr_${image.filename}`)}
+                            >
+                              <Download className="h-4 w-4 mr-1" />
+                              워터마크
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </CardContent>

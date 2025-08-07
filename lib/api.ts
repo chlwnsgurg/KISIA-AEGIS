@@ -344,9 +344,12 @@ class ApiClient {
 
   // 사용자 이미지 목록 조회 (API 명세서의 /images 엔드포인트 사용)
   async getUserImages(limit: number = 20, offset: number = 0): Promise<PaginatedResponse<any>> {
-    return this.request<PaginatedResponse<any>>(`/images?limit=${limit}&offset=${offset}`, {
+    const response = await this.request<PaginatedResponse<any>>(`/images?limit=${limit}&offset=${offset}`, {
       method: 'GET',
     });
+    
+    console.log('getUserImages response:', JSON.stringify(response, null, 2));
+    return response;
   }
 
   // 이미지 상세 정보 조회
@@ -419,9 +422,12 @@ class ApiClient {
 
   // 내 검증 요약 정보 조회
   async getMyValidationSummary(limit: number = 10, offset: number = 0): Promise<ApiResponse<any[]>> {
-    return this.request<ApiResponse<any[]>>(`/my-validation-summary?limit=${limit}&offset=${offset}`, {
+    const response = await this.request<ApiResponse<any[]>>(`/my-validation-summary?limit=${limit}&offset=${offset}`, {
       method: 'GET',
     });
+    
+    console.log('getMyValidationSummary response:', JSON.stringify(response, null, 2));
+    return response;
   }
 
   // UUID로 검증 레코드 상세 조회
