@@ -174,7 +174,7 @@ class ImageService:
             return BaseResponse(
                 success=True,
                 description=f"{len(image_list)}개의 업로드된 이미지를 조회했습니다. (전체: {total_count}개)",
-                data={
+                data=[{
                     "images": image_list,
                     "pagination": {
                         "total_count": total_count,
@@ -184,7 +184,7 @@ class ImageService:
                         "current_count": len(image_list)
                     },
                     "filters": active_filters
-                }
+                }]
             )
             
         except Exception as e:
