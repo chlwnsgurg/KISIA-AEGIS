@@ -18,7 +18,7 @@ services:
       - ssl-init
   
   backend:
-    image: ${ECR_REPOSITORY_ID}.dkr.ecr.${ECR_REGION}.amazonaws.com/${ECR_REPOSITORY_NAME}:${ECR_IMAGE_TAG}
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION_NAME}.amazonaws.com/${ECR_REPOSITORY_NAME}:${ECR_IMAGE_TAG}
     container_name: aegis-backend
     environment:
       - TZ=Asia/Seoul
@@ -30,7 +30,7 @@ services:
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_REGION_NAME=${AWS_REGION_NAME}
-      - BUCKET_NAME=${BUCKET_NAME}
+      - S3_DEPLOYMENT_BUCKET=${S3_DEPLOYMENT_BUCKET}
       - IMAGEDIR=${IMAGEDIR}
       - RECORDDIR=${RECORDDIR}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}

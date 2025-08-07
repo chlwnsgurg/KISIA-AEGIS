@@ -107,8 +107,8 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-.idea/*
-
 .secrets
 
 .claude
+
+.idea

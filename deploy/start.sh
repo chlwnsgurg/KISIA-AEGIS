@@ -10,7 +10,7 @@ sudo docker compose down
 ./ecr-login.sh
 
 # ECR에서 최신 이미지 pull
-ECR_IMAGE_URL="$ECR_REPOSITORY_ID.dkr.ecr.$ECR_REGION.amazonaws.com/$ECR_REPOSITORY_NAME:$ECR_IMAGE_TAG"
+ECR_IMAGE_URL="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION_NAME.amazonaws.com/$ECR_REPOSITORY_NAME:$ECR_IMAGE_TAG"
 echo "Pulling image: $ECR_IMAGE_URL"
 sudo docker pull $ECR_IMAGE_URL
 

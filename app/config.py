@@ -1,8 +1,25 @@
 import os
 from typing import Optional
 
+# 환경 구분: AWS 배포 환경인지 확인
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+IS_PRODUCTION = ENVIRONMENT == "production"
+
+# 로컬 개발환경에서만 .env 파일 로드
+if not IS_PRODUCTION:
+    try:
+        from dotenv import load_dotenv
+        load_dotenv()  # 로컬 테스트환경에서 .env 파일 로드
+        print("🔧 로컬 개발환경: .env 파일을 로드했습니다.")
+    except ImportError:
+        print("⚠️ python-dotenv가 설치되지 않았습니다.")
+
 
 class Settings:
+    # Environment Settings
+    ENVIRONMENT: str = ENVIRONMENT
+    IS_PRODUCTION: bool = IS_PRODUCTION
+    
     # Database Settings
     DB_USER: str = os.getenv("DB_USER")
     DB_PASSWORD: str = os.getenv("DB_PASSWORD")
@@ -11,13 +28,19 @@ class Settings:
     DB_NAME: str = os.getenv("DB_NAME")
     
     def __init__(self):
-        # 디버깅용 환경변수 출력
-        print(f"=== Environment Variables Debug ===")
-        print(f"DB_HOST: {self.DB_HOST}")
-        print(f"DB_USER: {self.DB_USER}")
-        print(f"DB_PORT: {self.DB_PORT}")
-        print(f"DB_NAME: {self.DB_NAME}")
-        print(f"=====================================")
+        # 환경 정보 출력
+        print(f"🚀 애플리케이션 시작 - 환경: {self.ENVIRONMENT}")
+        if self.IS_PRODUCTION:
+            print("📦 AWS 프로덕션 환경에서 실행 중")
+        else:
+            print("🔧 로컬 개발환경에서 실행 중")
+            # 로컬에서만 디버깅 정보 출력
+            print(f"=== Environment Variables Debug ===")
+            print(f"DB_HOST: {self.DB_HOST}")
+            print(f"DB_USER: {self.DB_USER}")
+            print(f"DB_PORT: {self.DB_PORT}")
+            print(f"DB_NAME: {self.DB_NAME}")
+            print(f"=====================================")
     
     @property
     def async_database_url(self) -> str:
@@ -40,7 +63,6 @@ class Settings:
     
     # S3 Bucket Settings
     S3_DEPLOYMENT_BUCKET: str = os.getenv("S3_DEPLOYMENT_BUCKET")
-    BUCKET_NAME: str = os.getenv("BUCKET_NAME")
     IMAGEDIR: str = os.getenv("IMAGEDIR")
     RECORDDIR: str = os.getenv("RECORDDIR")
 
@@ -56,9 +78,9 @@ class Settings:
     @property
     def s3_url(self) -> str:
         """AWS S3 버킷 URL"""
-        if not self.BUCKET_NAME or not self.AWS_REGION_NAME:
-            raise ValueError("BUCKET_NAME과 AWS_REGION_NAME이 설정되어야 합니다")
-        return f"https://{self.BUCKET_NAME}.s3.{self.AWS_REGION_NAME}.amazonaws.com"
+        if not self.S3_DEPLOYMENT_BUCKET or not self.AWS_REGION_NAME:
+            raise ValueError("S3_DEPLOYMENT_BUCKET과 AWS_REGION_NAME이 설정되어야 합니다")
+        return f"https://{self.S3_DEPLOYMENT_BUCKET}.s3.{self.AWS_REGION_NAME}.amazonaws.com"
     @property 
     def s3_image_dir(self) -> str:
         return f"{self.s3_url}/{self.IMAGEDIR}"

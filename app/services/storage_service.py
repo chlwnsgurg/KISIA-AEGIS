@@ -17,7 +17,7 @@ class StorageService:
             region_name=settings.AWS_REGION_NAME,
             config=Config(signature_version='s3v4')
         )
-        self.bucket_name = settings.BUCKET_NAME
+        self.bucket_name = settings.S3_DEPLOYMENT_BUCKET
     
     async def upload_file(self, file_content: bytes, s3_path: str) -> None:
         """단일 파일을 S3에 업로드"""
