@@ -48,6 +48,17 @@ class StorageService:
                 detail=f"S3 파일 업로드 중 오류가 발생했습니다: {str(e)}"
             )
     
+    async def download_file(self, s3_path: str) -> bytes:
+        """S3에서 파일 다운로드"""
+        try:
+            response = self.s3_client.get_object(Bucket=self.bucket_name, Key=s3_path)
+            return response['Body'].read()
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"S3 파일 다운로드 중 오류가 발생했습니다: {str(e)}"
+            )
+    
     def get_image_paths(self, image_id: int) -> List[str]:
         """이미지 ID를 기반으로 S3 경로들 생성 (GT, SRH만 사용)"""
         return [

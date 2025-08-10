@@ -15,9 +15,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-
-
-
 @router.post("/signup", 
     summary="회원가입",
     description="새 사용자 계정을 생성합니다.",
@@ -104,9 +101,10 @@ async def upload(
 )
 async def validate(
     file: UploadFile = File(..., description="검증할 PNG 파일"),
+    model: str = Form(..., description="보호 알고리즘 (EditGuard, OmniGuard, RobustWide)"),
     access_token: str = Security(APIKeyHeader(name='access-token'))
 ):
-    return await image_service.verify_image(file, access_token)
+    return await validation_service.validate_image(file, model, access_token)
 
 
 

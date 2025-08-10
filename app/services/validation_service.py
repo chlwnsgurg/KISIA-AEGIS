@@ -4,6 +4,9 @@ import logging
 import random
 import uuid
 from typing import List, Dict, Any
+import numpy as np
+from PIL import Image as PILImage
+import io
 
 from fastapi import HTTPException, status, UploadFile
 import sqlalchemy
@@ -116,8 +119,18 @@ class ValidationService:
             input_image_base64 = base64.b64encode(contents).decode('utf-8')
             
 
-            # AI 서버 시뮬레이션 (실제로는 외부 AI 서버에 HTTP 요청)
-            ai_response = await self.simulate_ai_validation(contents, original_filename, validation_algorithm)
+            # 실제 AI 서버를 통한 이미지 검증
+            verification_result = await self.image_service._send_to_ai_server_for_verification(contents, validation_enum)
+            logger.info(f"AI 서버 검증 응답: {verification_result}")
+            
+            # AI 응답을 AIValidationResponse 형식으로 변환 (계산된 변조률 사용)
+            calculated_rate = verification_result.get("tampering_rate", 0)  # 이미 계산된 값
+            ai_response = AIValidationResponse(
+                has_watermark=calculated_rate > 0,
+                detected_watermark_image_id=verification_result.get("original_image_id", None),
+                modification_rate=calculated_rate,  # 계산된 변조률 사용
+                visualization_image_base64=verification_result.get("tampered_regions_mask", "")
+            )
             
             
             logger.info(f"AI validation result: watermark={ai_response.has_watermark}, modification_rate={ai_response.modification_rate}, detected_id={ai_response.detected_watermark_image_id}")

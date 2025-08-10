@@ -94,9 +94,9 @@ class ImageService:
         logger.info(f"Image uploaded to DB: {inserted_data}")
         
         try:
-            # 임시: AI 서버가 수정될 때까지 원본 이미지 사용
-            # watermarked_image_content = await self._send_to_ai_server(file_content, image_id)
-            watermarked_image_content = file_content
+            # 임시: AI 서버 코드 오류로 인해 원본 이미지 사용
+            watermarked_image_content = await self._send_to_ai_server(file_content, image_id, protection_enum)
+            # watermarked_image_content = file_content
             
             # S3에 원본(GT)과 워터마크(SRH) 이미지 업로드
             gt_path = f"image/{image_id}/gt.png"
@@ -120,7 +120,7 @@ class ImageService:
             data=[inserted_data]
         )
     
-    async def _send_to_ai_server(self, image_content: bytes, image_id:int) -> bytes:
+    async def _send_to_ai_server(self, image_content: bytes, image_id:int, model:ProtectionAlgorithm) -> bytes:
         """AI 서버에 이미지를 전송하고 워터마크된 이미지를 받아온다"""
         try:
             # 이미지를 base64로 인코딩
@@ -129,7 +129,8 @@ class ImageService:
             # AI 서버로 전송할 데이터 구성
             payload = {
                 "image": image_b64,
-                "bit_input": f"{image_id:032b}"
+                "bit_input": f"{image_id:064b}",
+                "model": model.value
             }
             
             # AI 서버에 요청
@@ -216,19 +217,29 @@ class ImageService:
                 detail=f"이미지 목록 조회 중 오류가 발생했습니다: {str(e)}"
             )
     
-    async def verify_image(self, file: UploadFile, access_token: str) -> BaseResponse:
+    async def verify_image(self, file: UploadFile, model: str, access_token: str) -> BaseResponse:
         """이미지 위변조 검증"""
         user_id = self.auth_service.get_user_id_from_token(access_token)
         self.validate_file(file)
         
-        logger.info(f"User {user_id} requested image verification")
+        # protection_algorithm 검증
+        try:
+            protection_enum = ProtectionAlgorithm(model)
+        except ValueError:
+            valid_algorithms = [alg.value for alg in ProtectionAlgorithm]
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"유효하지 않은 보호 알고리즘입니다. 사용 가능한 값: {valid_algorithms}"
+            )
+        
+        logger.info(f"User {user_id} requested image verification with model {model}")
         
         try:
             # 파일 내용 읽기
             file_content = await file.read()
             
             # AI 서버로 검증 요청
-            verification_result = await self._send_to_ai_server_for_verification(file_content)
+            verification_result = await self._send_to_ai_server_for_verification(file_content, protection_enum)
             
             return BaseResponse(
                 success=True,
@@ -243,7 +254,7 @@ class ImageService:
                 detail=f"이미지 검증 중 오류가 발생했습니다: {str(e)}"
             )
     
-    async def _send_to_ai_server_for_verification(self, image_content: bytes) -> dict:
+    async def _send_to_ai_server_for_verification(self, image_content: bytes, model: ProtectionAlgorithm) -> dict:
         """AI 서버에 검증 요청을 보낸다"""
         try:
             # 이미지를 base64로 인코딩
@@ -251,7 +262,8 @@ class ImageService:
             
             # AI 서버로 전송할 데이터 구성
             payload = {
-                "sr_h": image_b64
+                "sr_h": image_b64,
+                "model": model.value
             }
             
             # AI 서버에 요청
@@ -268,6 +280,7 @@ class ImageService:
                     )
                 
                 response_data = response.json()
+                logger.info(f"AI 서버 응답: {response_data}")
                 
                 if not response_data.get("success"):
                     raise HTTPException(
@@ -275,10 +288,59 @@ class ImageService:
                         detail="AI 서버에서 검증 처리 실패"
                     )
                 
+                # 응답 데이터 구조에 따라 안전하게 접근
+                data = response_data.get("data", {})
+                recovered_bit = data.get("recovered_bit", "0")
+                mask_data = data.get("mask", "")
+                
+                # recovered_bit를 이진 문자열을 정수로 변환
+                original_image_id = int(recovered_bit, 2) if recovered_bit else 0
+                
+                # mask 데이터에서 변조률 계산
+                calculated_tampering_rate = 0.0
+                if mask_data:
+                    try:
+                        # mask base64 디코딩해서 이미지로 변환
+                        from PIL import Image as PILImage
+                        import io
+                        import numpy as np
+                        
+                        mask_bytes = base64.b64decode(mask_data)
+                        mask_image = PILImage.open(io.BytesIO(mask_bytes))
+                        
+                        # grayscale로 변환 (1과 0의 마스크이므로)
+                        if mask_image.mode != 'L':
+                            mask_image = mask_image.convert('L')
+                        
+                        # numpy 배열로 변환
+                        mask_array = np.array(mask_image)
+                        
+                        # 0과 1로 이루어진 mask에서 1의 개수로 변조률 계산
+                        # 픽셀값을 0 또는 1로 정규화 (0은 정상, 1은 변조)
+                        binary_mask = (mask_array > 0).astype(int)  # 0보다 큰 값은 모두 1로 변환
+                        
+                        total_pixels = binary_mask.size
+                        modified_pixels = np.sum(binary_mask)  # 1의 개수
+                        
+                        calculated_tampering_rate = (modified_pixels / total_pixels * 100) if total_pixels > 0 else 0.0  # 백분율로 변환
+                        
+                        logger.info(f"Mask 이미지 크기: {mask_image.size}")
+                        logger.info(f"원본 픽셀값 분포 - Min: {np.min(mask_array)}, Max: {np.max(mask_array)}")
+                        logger.info(f"이진화 후 - 0의 개수: {np.sum(binary_mask == 0)}, 1의 개수: {modified_pixels}")
+                        logger.info(f"변조률: {modified_pixels}/{total_pixels} = {calculated_tampering_rate:.4f}%")
+                        
+                    except Exception as e:
+                        logger.info(f"Mask 변조률 계산 실패: {e}")
+                        calculated_tampering_rate = data.get("acc", 0)  # AI 서버 응답 사용
+                else:
+                    logger.info("Mask 데이터 없음")
+                    calculated_tampering_rate = data.get("acc", 0)  # AI 서버 응답 사용
+                
                 return {
-                    "tampering_rate": response_data["data"]["acc"],  # 변조률
-                    "tampered_regions_mask": response_data["data"]["mask"],  # 변조된 부분 (base64 이미지)
-                    "original_image_id": response_data["data"]["recovered_bit"]  # 원본 이미지 ID
+                    "tampering_rate": calculated_tampering_rate,  # 계산된 변조률 사용
+                    "ai_tampering_rate": data.get("acc", 0),  # AI 서버 응답 변조률 (참고용)
+                    "tampered_regions_mask": mask_data,  # 변조된 부분 (base64 이미지)
+                    "original_image_id": original_image_id  # 원본 이미지 ID (이진→정수)
                 }
                 
         except httpx.TimeoutException:
