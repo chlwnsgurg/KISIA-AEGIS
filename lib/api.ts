@@ -47,6 +47,7 @@ interface ValidationRecordDetail {
   modification_rate: number | null;
   validation_time: string;
   s3_path: string;
+  s3_mask_url?: string;
   detected_watermark_info?: {
     image_id: number;
     filename: string;

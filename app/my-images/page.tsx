@@ -23,8 +23,6 @@ interface ImageRecord {
   protection_algorithm?: string
   s3_paths?: {
     gt?: string
-    lr?: string
-    sr?: string
     sr_h?: string
   }
 }

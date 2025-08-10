@@ -9,6 +9,7 @@ import { AlertTriangle, CheckCircle, Printer, Copy } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
+import MaskOverlaySlider from "@/components/mask-overlay-slider"
 import { apiClient, type ValidationRecordDetail } from "@/lib/api"
 
 interface ResultPageProps {
@@ -186,23 +187,37 @@ export default function ResultPage({ params }: ResultPageProps) {
                 </CardContent>
               </Card>
 
-              {/* Image Display */}
-              <Card className="mb-8">
-                <CardHeader>
-                  <CardTitle>검증된 이미지</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center">
-                    <img
-                      src={validationRecord.s3_path}
-                      alt={validationRecord.input_filename}
-                      className="max-w-full h-auto mx-auto rounded-lg shadow-lg"
-                      style={{ maxHeight: '600px' }}
-                    />
-                    <p className="text-sm text-gray-600 mt-2">검증에 사용된 이미지</p>
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Mask Overlay Visualization */}
+              {validationRecord.s3_mask_url && (
+                <div className="mb-8">
+                  <MaskOverlaySlider
+                    originalImageUrl={validationRecord.s3_path}
+                    maskImageUrl={validationRecord.s3_mask_url}
+                    modificationRate={validationRecord.modification_rate || 0}
+                    filename={validationRecord.input_filename}
+                  />
+                </div>
+              )}
+
+              {/* Fallback Image Display */}
+              {!validationRecord.s3_mask_url && (
+                <Card className="mb-8">
+                  <CardHeader>
+                    <CardTitle>검증된 이미지</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center">
+                      <img
+                        src={validationRecord.s3_path}
+                        alt={validationRecord.input_filename}
+                        className="max-w-full h-auto mx-auto rounded-lg shadow-lg"
+                        style={{ maxHeight: '600px' }}
+                      />
+                      <p className="text-sm text-gray-600 mt-2">검증에 사용된 이미지</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </>
           )}
 
