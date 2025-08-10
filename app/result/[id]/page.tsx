@@ -131,7 +131,7 @@ export default function ResultPage({ params }: ResultPageProps) {
               <Card className="mb-8">
                 <CardHeader>
                   <CardTitle className="flex items-center">
-                    {(validationRecord.modification_rate && validationRecord.modification_rate > 1) ? (
+                    {(validationRecord.modification_rate && validationRecord.modification_rate > 1.0) ? (
                       <>
                         <AlertTriangle className="mr-2 h-6 w-6 text-red-500" />
                         <span className="text-red-600">경고: 변조가 탐지되었습니다</span>
@@ -154,17 +154,17 @@ export default function ResultPage({ params }: ResultPageProps) {
                     </div>
                     <div>
                       <p className="text-sm text-gray-600 mb-1">분석 상태</p>
-                      <Badge variant={(validationRecord.modification_rate && validationRecord.modification_rate > 1) ? "destructive" : "default"}>
-                        {(validationRecord.modification_rate && validationRecord.modification_rate > 1) ? "변조 탐지" : "원본 확인"}
+                      <Badge variant={(validationRecord.modification_rate && validationRecord.modification_rate > 1.0) ? "destructive" : "default"}>
+                        {(validationRecord.modification_rate && validationRecord.modification_rate > 1.0) ? "변조 탐지" : "원본 확인"}
                       </Badge>
                     </div>
                   </div>
                   
                   <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                     <h4 className="font-semibold text-blue-800 mb-2">
-                      {(validationRecord.modification_rate && validationRecord.modification_rate > 1) ? "변조 분석 결과" : "이미지 분석 결과"}
+                      {(validationRecord.modification_rate && validationRecord.modification_rate > 1.0) ? "변조 분석 결과" : "이미지 분석 결과"}
                     </h4>
-                    {(validationRecord.modification_rate && validationRecord.modification_rate > 1) ? (
+                    {(validationRecord.modification_rate && validationRecord.modification_rate > 1.0) ? (
                       <div className="text-sm text-blue-700">
                         <p><strong>변조율:</strong> {validationRecord.modification_rate.toFixed(2)}%</p>
                         <p><strong>상태:</strong> 이미지에서 변조가 탐지되었습니다.</p>
@@ -179,7 +179,7 @@ export default function ResultPage({ params }: ResultPageProps) {
                       <div className="text-sm text-blue-700">
                         <p><strong>변조율:</strong> {validationRecord.modification_rate ? `${validationRecord.modification_rate.toFixed(2)}%` : '0.0%'}</p>
                         <p><strong>상태:</strong> 원본 이미지로 확인되었습니다.</p>
-                        <p className="no-print">변조율이 1% 미만으로 안전한 이미지입니다.</p>
+                        <p className="no-print">변조율이 1.0% 이하로 변조가 아닌 것으로 판단됩니다.</p>
                       </div>
                     )}
                   </div>

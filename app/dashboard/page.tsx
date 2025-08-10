@@ -144,7 +144,7 @@ export default function DashboardPage() {
         const stats: DashboardStats = {
           totalValidations: userStats.total_validations,
           protectedImages: userStats.total_uploaded_images,
-          detectedTampering: validationHistory.filter((v: ValidationRecord) => v.has_watermark).length,
+          detectedTampering: validationHistory.filter((v: ValidationRecord) => v.modification_rate && v.modification_rate > 1).length,
         }
         
         setDashboardStats(stats)
@@ -322,11 +322,11 @@ export default function DashboardPage() {
                           </div>
                           <div className="flex items-center justify-between sm:justify-end sm:flex-col sm:items-end space-x-3 sm:space-x-0 sm:space-y-2">
                             <div className="flex items-center space-x-2 sm:flex-col sm:items-end sm:space-x-0 sm:space-y-1">
-                              <Badge variant={validation.has_watermark ? "destructive" : "default"} className="text-xs">
-                                {validation.has_watermark ? "변조 탐지" : "원본"}
+                              <Badge variant={(validation.modification_rate && validation.modification_rate > 1) ? "destructive" : "default"} className="text-xs">
+                                {(validation.modification_rate && validation.modification_rate > 1) ? "변조 탐지" : "원본 확인"}
                               </Badge>
                               <p className="text-xs sm:text-sm text-gray-600">
-                                변조률: {validation.modification_rate ? `${(validation.modification_rate * 100).toFixed(1)}%` : 'N/A'}
+                                변조률: {validation.modification_rate ? `${validation.modification_rate.toFixed(2)}%` : 'N/A'}
                               </p>
                             </div>
                             <Button 
