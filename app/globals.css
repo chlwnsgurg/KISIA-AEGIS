@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -55,11 +57,93 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Noto Sans KR', sans-serif;
   }
 }
 
+/* Hero Section Gradient */
 .hero-gradient {
-  background: linear-gradient(135deg, #1a237e 0%, #3949ab 100%);
+  background: linear-gradient(162deg, rgba(26, 35, 126, 1) 0%, rgba(57, 73, 171, 1) 100%);
+  box-shadow: 0px 4px 4px #3542a1;
+}
+
+/* Main Hero Text Gradient */
+.hero-text-gradient {
+  background: linear-gradient(133deg, rgba(127, 191, 255, 1) 0%, rgba(255, 255, 255, 1) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-fill-color: transparent;
+}
+
+/* Ellipse Glow Effect */
+.hero-ellipse {
+  border-radius: 256.5px / 71px;
+  background: radial-gradient(50% 50% at 50% 47%, rgba(149, 202, 255, 0.8) 0%, rgba(223, 239, 255, 0.3) 54%, rgba(255, 255, 255, 0) 100%);
+}
+
+/* Service Card Gradients */
+.service-card-editguard {
+  background: linear-gradient(162deg, rgba(26, 35, 126, 1) 0%, rgba(57, 73, 171, 1) 100%);
+  box-shadow: 0px 4px 20px #a0b2c480;
+}
+
+.service-card {
+  box-shadow: 0px 4px 20px #a0b2c480;
+}
+
+/* Feature Tags */
+.feature-tag {
+  background-color: rgba(191, 219, 254, 0.5);
+  border-radius: 15px;
+  color: #0b1179;
+}
+
+/* Tech Cards */
+.tech-card-blue {
+  background: linear-gradient(162deg, rgba(26, 35, 126, 0.9) 0%, rgba(57, 73, 171, 0.9) 100%);
+  box-shadow: 0px 4px 20px #a1b2c440;
+}
+
+.tech-card-white {
+  background-color: #f8f9fa;
+  box-shadow: 0px 4px 20px #a1b2c440;
+}
+
+/* Section Divider - Triangle Element */
+.triangle-divider {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 107px;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.triangle-shape {
+  width: 0;
+  height: 0;
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  border-style: solid;
+  border-width: 0 551.5px 107px 551.5px;
+  border-color: transparent transparent rgba(114, 131, 152, 0.5) transparent;
+  background: linear-gradient(135deg, rgba(114, 131, 152, 0.5) 0%, rgba(191, 219, 254, 0.5) 100%);
+}
+
+/* Alternative using clip-path for better gradient support */
+.triangle-gradient {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 107px;
+  background: linear-gradient(135deg, rgba(114, 131, 152, 0.5) 0%, rgba(191, 219, 254, 0.5) 100%);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
 }
 
 .comparison-slider {

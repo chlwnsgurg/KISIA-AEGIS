@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Menu, X, User } from "lucide-react"
 import { apiClient } from "@/lib/api"
@@ -49,16 +50,17 @@ export default function Header() {
         shouldUseTransparentHeader ? "bg-transparent" : "bg-white shadow-md"
       }`}
     >
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link
-            href="/"
-            className={`text-2xl font-bold transition-colors ${
-              shouldUseTransparentHeader ? "text-white" : "text-primary"
-            }`}
-          >
-            AEGIS
+          <Link href="/" className="flex items-center">
+            <Image
+              src="/AEGIS.png"
+              alt="AEGIS"
+              width={78}
+              height={20}
+              className="object-contain"
+            />
           </Link>
 
           {/* Desktop Navigation */}
