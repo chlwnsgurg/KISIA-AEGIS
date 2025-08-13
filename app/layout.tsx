@@ -5,8 +5,8 @@ import { Toaster } from "@/components/ui/toaster"
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: '아이기스 - AI 기반 이미지 보호 및 검증 플랫폼',
-  description: '원본 이미지를 워터마크로 보호하고 AI 기술로 위변조를 검증하는 종합 이미지 보안 솔루션',
+  title: 'AEGIS - AI 편집도 속일 수 없는 워터마크 기술',
+  description: '딥러닝 기반 보이지 않는 표식이 원본의 소유권을 지켜주고, 조작의 흔적은 눈에 보이는 증거로 드러냅니다.',
   keywords: ['이미지 보호', '워터마크', 'AI 검증', '위변조 탐지', '이미지 보안', 'AEGIS'],
   authors: [{ name: 'AEGIS Team' }],
   creator: 'AEGIS',
@@ -32,8 +32,8 @@ export const metadata: Metadata = {
   },
   manifest: '/site.webmanifest',
   openGraph: {
-    title: '아이기스 - AI 기반 이미지 보호 및 검증 플랫폼',
-    description: '원본 이미지를 워터마크로 보호하고 AI 기술로 위변조를 검증하는 종합 이미지 보안 솔루션',
+    title: 'AEGIS - AI 편집도 속일 수 없는 워터마크 기술',
+    description: '딥러닝 기반 보이지 않는 표식이 원본의 소유권을 지켜주고, 조작의 흔적은 눈에 보이는 증거로 드러냅니다.',
     siteName: '아이기스 (AEGIS)',
     images: [
       {
@@ -54,8 +54,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: '아이기스 - AI 기반 이미지 보호 및 검증 플랫폼',
-    description: '원본 이미지를 워터마크로 보호하고 AI 기술로 위변조를 검증하는 종합 이미지 보안 솔루션',
+    title: 'AEGIS - AI 편집도 속일 수 없는 워터마크 기술',
+    description: '딥러닝 기반 보이지 않는 표식이 원본의 소유권을 지켜주고, 조작의 흔적은 눈에 보이는 증거로 드러냅니다.',
     images: ['/logo.png'],
   },
   robots: {

@@ -55,7 +55,7 @@ export default function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center">
             <Image
-              src="/AEGIS.png"
+              src="/Logo.png"
               alt="AEGIS"
               width={78}
               height={20}
