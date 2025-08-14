@@ -106,6 +106,32 @@ async def validate(
 ):
     return await validation_service.validate_image(file, model, access_token)
 
+@router.get("/algorithms",
+    summary="보호 알고리즘 목록 및 설명",
+    description="사용 가능한 보호 알고리즘 목록과 각각의 설명을 제공합니다.",
+    response_model=BaseResponse
+)
+async def get_algorithms():
+    """보호 알고리즘 목록과 설명 반환"""
+    algorithms = {
+        "EditGuard": {
+            "name": "EditGuard",
+            "title": "어디가 변조되었는지 증명해야 할 때",
+            "description": "딥페이크, 허위 정보 등 조작된 영역을 95% 이상 정밀도로 탐지\n언론 보도, 법적 분쟁 등 조작의 범위와 내용 증명이 핵심일 때 최적의 솔루션"
+        },
+        "RobustWide": {
+            "name": "RobustWide", 
+            "title": "어떤 공격에도 원본임을 지켜내야 할 때",
+            "description": "강력한 AI 편집 공격에도 워터마크가 훼손되지 않는 최고의 생존력\n웹툰, 캐릭터 등 고부가가치 IP 자산이나 브랜드 로고를 보호할 때 가장 효과적"
+        }
+    }
+    
+    return BaseResponse(
+        success=True,
+        message="알고리즘 목록 조회 성공",
+        data=[algorithms]
+    )
+
 
 
 @router.get("/validation-history",
