@@ -243,74 +243,6 @@ class ApiClient {
     return data;
   }
 
-  // 인증이 필요없는 public API 요청
-  private async publicRequest<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
-    const headers: Record<string, string> = {
-      ...(options.headers as Record<string, string>),
-    };
-
-    const url = `${API_BASE_URL}${endpoint}`;
-    console.log('Public API Request:', {
-      url,
-      method: options.method || 'GET',
-      headers,
-      body: options.body
-    });
-
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    });
-
-    console.log('Public API Response:', {
-      status: response.status,
-      statusText: response.statusText,
-      url: response.url
-    });
-
-    if (!response.ok) {
-      let errorMessage = 'API 요청 실패';
-      
-      if (response.status >= 400 && response.status < 500) {
-        switch (response.status) {
-          case 404:
-            errorMessage = '요청한 리소스를 찾을 수 없습니다.';
-            break;
-          case 403:
-            errorMessage = '접근 권한이 없습니다.';
-            break;
-          default:
-            errorMessage = `클라이언트 오류 (${response.status}): ${response.statusText}`;
-        }
-      } else if (response.status >= 500) {
-        switch (response.status) {
-          case 500:
-            errorMessage = '서버 내부 오류가 발생했습니다.';
-            break;
-          case 502:
-            errorMessage = '서버 게이트웨이 오류가 발생했습니다.';
-            break;
-          case 503:
-            errorMessage = '서비스를 일시적으로 사용할 수 없습니다.';
-            break;
-          case 504:
-            errorMessage = '서버에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요.';
-            break;
-          default:
-            errorMessage = `서버 오류 (${response.status}): ${response.statusText}`;
-        }
-      }
-      
-      throw new Error(errorMessage);
-    }
-
-    const data = await response.json();
-    console.log('Public API Response Data:', data);
-    return data;
-  }
 
   // 회원가입
   async signup(name: string, email: string, password: string): Promise<ApiResponse<string>> {
@@ -527,11 +459,10 @@ class ApiClient {
     console.log('getMyValidationSummary response:', JSON.stringify(response, null, 2));
     return response;
   }
-
+  
   // UUID로 검증 레코드 상세 조회
   async getValidationRecordByUuid(validationUuid: string): Promise<ValidationRecordDetail> {
-    // public API로 호출 (인증 불필요)
-    const response = await this.publicRequest<ApiResponse<ValidationRecordDetail[]>>(`/validation-record/uuid/${validationUuid}`, {
+    const response = await this.request<ApiResponse<ValidationRecordDetail[]>>(`/validation-record/uuid/${validationUuid}`, {
       method: 'GET',
     });
     
