@@ -206,8 +206,8 @@ export default function ResultContent({ validationId }: ResultContentProps) {
                 </CardContent>
               </Card>
 
-              {/* Mask Overlay Visualization */}
-              {validationRecord.s3_mask_url && (
+              {/* Mask Overlay Visualization - Hide for RobustWide algorithm */}
+              {validationRecord.s3_mask_url && validationRecord.validation_algorithm !== 'RobustWide' && (
                 <div className="mb-8">
                   <MaskOverlaySlider
                     originalImageUrl={validationRecord.s3_path}
@@ -218,8 +218,9 @@ export default function ResultContent({ validationId }: ResultContentProps) {
                 </div>
               )}
 
-              {/* Fallback Image Display */}
-              {!validationRecord.s3_mask_url && validationRecord.s3_path && (
+              {/* Original Image Display for RobustWide or when no mask available */}
+              {((validationRecord.validation_algorithm === 'RobustWide' && validationRecord.s3_path) || 
+                (!validationRecord.s3_mask_url && validationRecord.s3_path)) && (
                 <Card className="mb-8">
                   <CardHeader>
                     <CardTitle>입력 이미지</CardTitle>
