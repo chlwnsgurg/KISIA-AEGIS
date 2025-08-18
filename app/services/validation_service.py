@@ -140,18 +140,18 @@ class ValidationService:
                     )
                 logger.info(f"복구된 image ID {original_image_id} 존재 확인 완료")
                 
-                # RobustWide 모델 특별 처리: 픽셀 비교 기반 마스크 생성
-                if validation_enum == ProtectionAlgorithm.RobustWide:
-                    await self._process_robustwide_validation(
-                        contents, original_image_id, verification_result
+                # RobustWide 및 EditGuard 모델 특별 처리: 픽셀 비교 기반 마스크 생성
+                if validation_enum in [ProtectionAlgorithm.RobustWide, ProtectionAlgorithm.EditGuard]:
+                    await self._process_pixel_comparison_validation(
+                        contents, original_image_id, verification_result, validation_enum
                     )
             else:
                 # original_image_id가 없는 경우 처리
                 logger.info(f"original_image_id가 없습니다: {original_image_id}")
                 
-                # RobustWide의 경우 워터마크가 감지되지 않더라도 처리할 수 있도록 대안 로직 추가
-                if validation_enum == ProtectionAlgorithm.RobustWide:
-                    logger.info("RobustWide: original_image_id 없음. AI 서버 응답 기반으로 처리합니다.")
+                # RobustWide와 EditGuard의 경우 워터마크가 감지되지 않더라도 처리할 수 있도록 대안 로직 추가
+                if validation_enum in [ProtectionAlgorithm.RobustWide, ProtectionAlgorithm.EditGuard]:
+                    logger.info(f"{validation_enum.value}: original_image_id 없음. AI 서버 응답 기반으로 처리합니다.")
                     # AI 서버에서 받은 기본 변조률과 mask 사용
                     # (실제 프로덕션에서는 다른 로직 구현 가능)
 
@@ -201,8 +201,8 @@ class ValidationService:
                     await self.storage_service.upload_file(mask_bytes, mask_s3_path)
                     
                     # 사용된 알고리즘에 따라 로그 메시지 구분
-                    if validation_enum == ProtectionAlgorithm.RobustWide:
-                        logger.info(f"RobustWide generated mask image saved to S3: {mask_s3_path}")
+                    if validation_enum in [ProtectionAlgorithm.RobustWide, ProtectionAlgorithm.EditGuard]:
+                        logger.info(f"{validation_enum.value} generated mask image saved to S3: {mask_s3_path}")
                     else:
                         logger.info(f"AI server mask image saved to S3: {mask_s3_path}")
                     
@@ -216,8 +216,8 @@ class ValidationService:
                         logger.error(f"Failed to create combined image: {str(combine_error)}")
                 else:
                     # mask가 없는 경우 (변조되지 않은 경우)
-                    if validation_enum == ProtectionAlgorithm.RobustWide:
-                        logger.info(f"RobustWide: No tampering detected, empty mask generated")
+                    if validation_enum in [ProtectionAlgorithm.RobustWide, ProtectionAlgorithm.EditGuard]:
+                        logger.info(f"{validation_enum.value}: No tampering detected, empty mask generated")
                     else:
                         logger.info(f"AI server: No mask data provided")
                     
@@ -656,14 +656,15 @@ class ValidationService:
         
         return base64.b64encode(mask_buffer.getvalue()).decode('utf-8')
     
-    async def _process_robustwide_validation(self, input_image_bytes: bytes, original_image_id: int, verification_result: dict) -> None:
+    async def _process_pixel_comparison_validation(self, input_image_bytes: bytes, original_image_id: int, verification_result: dict, validation_enum: ProtectionAlgorithm) -> None:
         """
-        RobustWide 모델 검증 처리
+        픽셀 비교 기반 검증 처리 (RobustWide, EditGuard)
         
         Args:
             input_image_bytes: 입력 이미지 바이트
             original_image_id: 원본 이미지 ID
             verification_result: 검증 결과 딕셔너리 (수정됨)
+            validation_enum: 검증 알고리즘
         """
         try:
             # 원본 이미지 정보를 DB에서 조회하여 파일명 가져오기
@@ -688,16 +689,16 @@ class ValidationService:
             )
             
             # 결과 업데이트
-            self._update_verification_result(verification_result, mask_data, tampering_rate, original_image_id)
+            self._update_verification_result(verification_result, mask_data, tampering_rate, original_image_id, validation_enum)
             
         except Exception as error:
-            logger.warning(f"RobustWide 검증 처리 중 오류: {str(error)}. 기존 AI 서버 결과 유지")
+            logger.warning(f"{validation_enum.value} 검증 처리 중 오류: {str(error)}. 기존 AI 서버 결과 유지")
             # 오류 발생 시 기존 AI 서버 결과 그대로 사용
     
-    def _update_verification_result(self, verification_result: dict, mask_data: str, tampering_rate: float, original_image_id: int) -> None:
+    def _update_verification_result(self, verification_result: dict, mask_data: str, tampering_rate: float, original_image_id: int, validation_enum: ProtectionAlgorithm) -> None:
         """검증 결과 업데이트"""
         if tampering_rate == 0.0:
-            logger.info(f"RobustWide: 입력 이미지와 원본 이미지(ID: {original_image_id}) 일치 - 변조 없음")
+            logger.info(f"{validation_enum.value}: 입력 이미지와 원본 이미지(ID: {original_image_id}) 일치 - 변조 없음")
             # 변조가 없는 경우에도 빈 마스크 이미지 생성
             empty_mask_data = self._create_empty_mask()
             verification_result.update({
@@ -705,7 +706,7 @@ class ValidationService:
                 "tampered_regions_mask": empty_mask_data
             })
         else:
-            logger.info(f"RobustWide: 변조 감지 - 변조률: {tampering_rate:.2f}% (원본 ID: {original_image_id})")
+            logger.info(f"{validation_enum.value}: 변조 감지 - 변조률: {tampering_rate:.2f}% (원본 ID: {original_image_id})")
             verification_result.update({
                 "tampering_rate": tampering_rate,
                 "tampered_regions_mask": mask_data
