@@ -80,12 +80,12 @@ class Settings:
     
     # Email Settings
     SMTP_HOST: str = os.getenv("SMTP_HOST")
-    SMTP_PORT: int = int(os.getenv("SMTP_PORT"))
+    SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
     SMTP_USER: str = os.getenv("SMTP_USER")
     SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD")
     SMTP_USE_TLS: bool = os.getenv("SMTP_USE_TLS", "true").lower() == "true"
     EMAIL_FROM: str = os.getenv("EMAIL_FROM")
-    EMAIL_FROM_NAME: str = os.getenv("EMAIL_FROM_NAME")
+    EMAIL_FROM_NAME: str = os.getenv("EMAIL_FROM_NAME", "Aegis Security System")
 
     @property
     def s3_url(self) -> str:
