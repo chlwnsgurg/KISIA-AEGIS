@@ -666,8 +666,20 @@ class ValidationService:
             verification_result: 검증 결과 딕셔너리 (수정됨)
         """
         try:
-            # 원본 sr_h 이미지 다운로드
-            original_sr_h_path = f"image/{original_image_id}/sr_h.png"
+            # 원본 이미지 정보를 DB에서 조회하여 파일명 가져오기
+            image_query = sqlalchemy.select(Image.filename).where(Image.id == original_image_id)
+            image_record = await database.fetch_one(image_query)
+            
+            if not image_record:
+                logger.error(f"원본 이미지 ID {original_image_id}를 DB에서 찾을 수 없습니다.")
+                return
+            
+            # 새로운 파일명 형식으로 sr_h 경로 생성
+            original_filename = image_record["filename"]
+            filename_without_ext = original_filename.rsplit('.', 1)[0] if '.' in original_filename else original_filename
+            original_sr_h_path = f"image/{original_image_id}/{filename_without_ext}_wm.png"
+            
+            # 원본 워터마크 이미지 다운로드
             original_sr_h_bytes = await self.storage_service.download_file(original_sr_h_path)
             
             # 픽셀 비교 기반 마스크 및 변조률 생성
