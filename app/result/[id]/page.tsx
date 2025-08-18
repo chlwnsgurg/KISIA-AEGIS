@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: ResultPageProps): Promise<Met
       throw new Error('No validation record found')
     }
     
-    const isDetected = record.modification_rate && record.modification_rate > 1.0
+    const isDetected = record.modification_rate && record.modification_rate > 0
     const title = `${record.input_filename} - ${isDetected ? '변조 탐지' : '원본 확인'} | AEGIS`
     const description = `${record.input_filename} 파일의 위변조 검증 결과입니다. 변조률: ${record.modification_rate ? `${record.modification_rate.toFixed(2)}%` : '0%'}, 알고리즘: ${record.validation_algorithm}`
     

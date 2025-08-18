@@ -144,7 +144,7 @@ export default function DashboardPage() {
         const stats: DashboardStats = {
           totalValidations: userStats.total_validations,
           protectedImages: userStats.total_uploaded_images,
-          detectedTampering: validationHistory.filter((v: ValidationRecord) => v.modification_rate && v.modification_rate > 1).length,
+          detectedTampering: validationHistory.filter((v: ValidationRecord) => v.modification_rate && v.modification_rate > 0).length,
         }
         
         setDashboardStats(stats)
@@ -331,8 +331,8 @@ export default function DashboardPage() {
                                     <h3 className="font-semibold text-lg text-gray-900 truncate">
                                       {validation.input_filename || '파일명 없음'}
                                     </h3>
-                                    <Badge variant={(validation.modification_rate && validation.modification_rate > 1) ? "destructive" : "default"}>
-                                      {(validation.modification_rate && validation.modification_rate > 1) ? "변조 탐지" : "원본 확인"}
+                                    <Badge variant={(validation.modification_rate && validation.modification_rate > 0) ? "destructive" : "default"}>
+                                      {(validation.modification_rate && validation.modification_rate > 0) ? '변조 탐지' : '원본 확인'}
                                     </Badge>
                                   </div>
                                   
@@ -344,7 +344,12 @@ export default function DashboardPage() {
                                     <div className="flex items-center">
                                       <span className="mr-1">변조률:</span>
                                       <span className="font-medium text-blue-600">
-                                        {validation.modification_rate ? `${validation.modification_rate.toFixed(2)}%` : '0%'}
+                                        {validation.validation_algorithm === 'RobustWide' 
+                                          ? '지원하지않음' 
+                                          : validation.modification_rate 
+                                            ? `${validation.modification_rate.toFixed(2)}%` 
+                                            : '0%'
+                                        }
                                       </span>
                                     </div>
                                     <div className="flex items-center">

@@ -178,7 +178,7 @@ const MaskOverlaySlider = forwardRef<any, MaskOverlaySliderProps>(({
     )
   }
 
-  const isTampering = modificationRate > 1.0
+  const isTampering = modificationRate > 0
 
   return (
     <Card>
