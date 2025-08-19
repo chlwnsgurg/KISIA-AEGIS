@@ -12,6 +12,8 @@ import Header from "@/components/header"
 import Footer from "@/components/footer"
 import FileUpload from "@/components/file-upload"
 import { apiClient, type AlgorithmsResponse, type AlgorithmInfo } from "@/lib/api"
+import { apiWithLoading } from "@/lib/api-with-loading"
+import { useLoading } from "@/contexts/loading-context"
 
 export default function VerifyPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -21,6 +23,12 @@ export default function VerifyPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
+  const loadingContext = useLoading()
+
+  // API 래퍼에 로딩 컨텍스트 설정
+  useEffect(() => {
+    apiWithLoading.setLoadingContext(loadingContext)
+  }, [loadingContext])
 
   // 인증 확인 및 알고리즘 목록 가져오기
   useEffect(() => {
@@ -39,7 +47,7 @@ export default function VerifyPage() {
         } else {
           // 알고리즘 목록 가져오기 (검증에서도 동일한 알고리즘 사용)
           try {
-            const algorithmsData = await apiClient.getAlgorithms()
+            const algorithmsData = await apiWithLoading.getAlgorithms()
             setAlgorithms(algorithmsData)
             const algorithmNames = Object.keys(algorithmsData)
             if (algorithmNames.length > 0) {
@@ -77,7 +85,7 @@ export default function VerifyPage() {
 
     try {
       // 이미지 검증 (선택된 모델 포함)
-      const validateResponse = await apiClient.validateImage(selectedFile, selectedAlgorithm)
+      const validateResponse = await apiWithLoading.validateImage(selectedFile, selectedAlgorithm)
       
       console.log('Validation response:', validateResponse)
       

@@ -16,6 +16,8 @@ import { useToast } from "@/components/ui/use-toast"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
 import { apiClient } from "@/lib/api"
+import { apiWithLoading } from "@/lib/api-with-loading"
+import { useLoading } from "@/contexts/loading-context"
 import { isAuthenticated } from "@/lib/auth-utils"
 
 export default function SignupPage() {
@@ -33,6 +35,12 @@ export default function SignupPage() {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const router = useRouter()
   const { toast } = useToast()
+  const loadingContext = useLoading()
+
+  // API 래퍼에 로딩 컨텍스트 설정
+  useEffect(() => {
+    apiWithLoading.setLoadingContext(loadingContext)
+  }, [loadingContext])
 
   // 로그인된 상태 확인
   useEffect(() => {
@@ -85,7 +93,7 @@ export default function SignupPage() {
 
     try {
       
-      await apiClient.signup(formData.name, formData.email, formData.password)
+      await apiWithLoading.signup(formData.name, formData.email, formData.password)
       
       toast({
         title: "회원가입 성공",

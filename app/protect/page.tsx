@@ -13,6 +13,8 @@ import Header from "@/components/header"
 import Footer from "@/components/footer"
 import FileUpload from "@/components/file-upload"
 import { apiClient, type AlgorithmsResponse, type AlgorithmInfo } from "@/lib/api"
+import { apiWithLoading } from "@/lib/api-with-loading"
+import { useLoading } from "@/contexts/loading-context"
 
 export default function ProtectPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -23,6 +25,12 @@ export default function ProtectPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
+  const loadingContext = useLoading()
+
+  // API 래퍼에 로딩 컨텍스트 설정
+  useEffect(() => {
+    apiWithLoading.setLoadingContext(loadingContext)
+  }, [loadingContext])
 
   // 인증 확인 및 알고리즘 목록 가져오기
   useEffect(() => {
@@ -41,7 +49,7 @@ export default function ProtectPage() {
         } else {
           // 알고리즘 목록 가져오기
           try {
-            const algorithmsData = await apiClient.getAlgorithms()
+            const algorithmsData = await apiWithLoading.getAlgorithms()
             setAlgorithms(algorithmsData)
             const algorithmNames = Object.keys(algorithmsData)
             if (algorithmNames.length > 0) {
@@ -79,7 +87,7 @@ export default function ProtectPage() {
 
     try {
       // 이미지 업로드 (선택된 알고리즘 포함)
-      await apiClient.uploadImage(copyrightInfo, selectedFile, selectedAlgorithm)
+      await apiWithLoading.uploadImage(copyrightInfo, selectedFile, selectedAlgorithm)
       
       toast({
         title: "업로드 성공",

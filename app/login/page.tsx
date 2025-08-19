@@ -15,6 +15,8 @@ import { useToast } from "@/components/ui/use-toast"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
 import { apiClient } from "@/lib/api"
+import { apiWithLoading } from "@/lib/api-with-loading"
+import { useLoading } from "@/contexts/loading-context"
 import { isAuthenticated } from "@/lib/auth-utils"
 
 export default function LoginPage() {
@@ -26,6 +28,12 @@ export default function LoginPage() {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const router = useRouter()
   const { toast } = useToast()
+  const loadingContext = useLoading()
+
+  // API 래퍼에 로딩 컨텍스트 설정
+  useEffect(() => {
+    apiWithLoading.setLoadingContext(loadingContext)
+  }, [loadingContext])
 
   // 로그인된 상태 확인 및 로그인 유지 설정 복원
   useEffect(() => {
@@ -59,8 +67,8 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      console.log('Calling apiClient.login...');
-      await apiClient.login(email, password, rememberMe)
+      console.log('Calling apiWithLoading.login...');
+      await apiWithLoading.login(email, password, rememberMe)
       console.log('Login successful');
         
       toast({
