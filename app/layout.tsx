@@ -46,7 +46,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'AEGIS - AI 편집도 속일 수 없는 워터마크 기술',
     description: '딥러닝 기반 보이지 않는 표식이 원본의 소유권을 지켜주고, 조작의 흔적은 눈에 보이는 증거로 드러냅니다.',
-    url: 'https://aegis.ai',
+    url: 'https://aegis.gdgoc.com',
     siteName: 'AEGIS',
     images: [
       {
