@@ -18,6 +18,7 @@ from app.schemas import BaseResponse, AIValidationResponse
 from app.services.auth_service import auth_service
 from app.services.image_service import ImageService
 from app.services.storage_service import storage_service
+from app.services.email_service import email_service
 
 logger = logging.getLogger(__name__)
 
@@ -224,6 +225,20 @@ class ValidationService:
             except Exception as s3_error:
                 logger.error(f"Failed to save validation images to S3: {str(s3_error)}")
                 # S3 저장 실패해도 검증은 계속 진행
+            
+            # 위변조 검출 시 원저작자에게 이메일 발송
+            if ai_response.has_watermark and ai_response.detected_watermark_image_id and ai_response.modification_rate and ai_response.modification_rate > 0:
+                await self._send_forgery_detection_email(
+                    validation_uuid=validation_uuid,
+                    detected_image_id=ai_response.detected_watermark_image_id,
+                    detection_info={
+                        "detection_time": validation_record["time_created"].strftime("%Y-%m-%d %H:%M:%S") if validation_record else None,
+                        "image_name": original_filename,
+                        "confidence_score": round(ai_response.modification_rate, 2),
+                        "detection_method": validation_enum.value
+                    },
+                    tampered_image_url=f"https://{settings.S3_DEPLOYMENT_BUCKET}.s3.{settings.AWS_REGION_NAME}.amazonaws.com/record/{validation_uuid}/{original_filename}"
+                )
             
             # 응답 데이터 구성
             response_data = {
@@ -778,6 +793,78 @@ class ValidationService:
             # 실패 시 원본 이미지 반환
             return original_bytes
 
+    async def _send_forgery_detection_email(
+        self,
+        validation_uuid: str,
+        detected_image_id: int,
+        detection_info: dict,
+        tampered_image_url: str
+    ) -> None:
+        """위변조 검출 시 원저작자에게 이메일 발송"""
+        try:
+            # 원본 이미지 정보 조회
+            image_query = sqlalchemy.select(Image).where(Image.id == detected_image_id)
+            image_record = await database.fetch_one(image_query)
+            
+            if not image_record:
+                logger.error(f"원본 이미지 ID {detected_image_id}를 찾을 수 없습니다.")
+                return
+            
+            # 원저작자 정보 조회
+            from app.models import User
+            user_id_val = image_record.user_id if hasattr(image_record, 'user_id') else image_record["user_id"]
+            user_query = sqlalchemy.select(User).where(User.id == user_id_val)
+            user_record = await database.fetch_one(user_query)
+            
+            if not user_record:
+                user_id_val = image_record.user_id if hasattr(image_record, 'user_id') else image_record["user_id"]
+                logger.error(f"사용자 ID {user_id_val}를 찾을 수 없습니다.")
+                return
+            
+            # 원본 이미지 URL들 생성
+            filename = image_record.filename if hasattr(image_record, 'filename') else image_record["filename"]
+            filename_without_ext = filename.rsplit('.', 1)[0] if '.' in filename else filename
+            original_image_url = f"https://{settings.S3_DEPLOYMENT_BUCKET}.s3.{settings.AWS_REGION_NAME}.amazonaws.com/image/{detected_image_id}/{filename_without_ext}_origi.png"
+            watermark_image_url = f"https://{settings.S3_DEPLOYMENT_BUCKET}.s3.{settings.AWS_REGION_NAME}.amazonaws.com/image/{detected_image_id}/{filename_without_ext}_wm.png"
+            
+            # 원본 이미지 정보 추가
+            upload_time = image_record.time_created if hasattr(image_record, 'time_created') else image_record["time_created"]
+            copyright_info = getattr(image_record, 'copyright', None) if hasattr(image_record, 'copyright') else image_record.get("copyright", "저작권자 정보 없음")
+            
+            original_image_info = {
+                "image_id": detected_image_id,
+                "filename": filename,
+                "upload_time": upload_time.strftime("%Y-%m-%d %H:%M:%S") if upload_time else "N/A",
+                "copyright_info": copyright_info or "저작권자 정보 없음",
+                "original_image_url": original_image_url,
+                "watermark_image_url": watermark_image_url
+            }
+            
+            # 보고서 URL 생성
+            report_url = f"https://aegis.gdgoc.com/result/{validation_uuid}"
+            
+            # 이메일 발송
+            user_email = user_record.email if hasattr(user_record, 'email') else user_record["email"]
+            username = user_record.name if hasattr(user_record, 'name') else user_record["name"]
+            
+            success = await email_service.send_forgery_detection_email(
+                user_email=user_email,
+                username=username,
+                detection_info=detection_info,
+                report_url=report_url,
+                image_url=tampered_image_url,
+                original_image_info=original_image_info
+            )
+            
+            if success:
+                logger.info(f"위변조 검출 이메일 발송 성공: {user_email} (이미지 ID: {detected_image_id})")
+            else:
+                logger.error(f"위변조 검출 이메일 발송 실패: {user_email} (이미지 ID: {detected_image_id})")
+                
+        except Exception as e:
+            import traceback
+            logger.error(f"위변조 검출 이메일 발송 중 오류: {str(e)}")
+            logger.error(f"상세 오류: {traceback.format_exc()}")
 
     async def get_validation_record_by_uuid_public(self, validation_uuid: str) -> BaseResponse:
         """UUID로 검증 레코드 조회 (인증 불필요)"""
