@@ -56,8 +56,10 @@ class ApiWithLoading {
       () => apiClient.signup(name, email, password),
       '회원가입 처리 중입니다...',
       [
-        { progress: 30, message: '입력 정보를 확인하고 있습니다...' },
-        { progress: 70, message: '계정을 생성하고 있습니다...' }
+        { progress: 25, message: '입력 정보를 확인하고 있습니다...' },
+        { progress: 50, message: '계정을 생성하고 있습니다...' },
+        { progress: 75, message: '가입 완료 알림을 발송하고 있습니다...' },
+        { progress: 90, message: '회원가입을 완료하고 있습니다...' }
       ]
     );
   }
