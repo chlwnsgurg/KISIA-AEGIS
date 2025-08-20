@@ -56,11 +56,14 @@ class UserService:
         api_key = self.generate_api_key()
         
         # 사용자 생성
+        from app.models import kst_now
+        
         insert_query = User.__table__.insert().values(
             name=user_data.name, 
             email=user_data.email, 
             password=hashed_password,
-            api_key=api_key
+            api_key=api_key,
+            time_created=kst_now()
         )
         await database.execute(insert_query)
         

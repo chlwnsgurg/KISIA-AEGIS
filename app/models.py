@@ -1,15 +1,21 @@
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from enum import Enum
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean, Float, Enum as SQLEnum, Text
-from sqlalchemy.sql import func
 
 Base = declarative_base()
+
+# 한국 시간대 설정
+KST = timezone(timedelta(hours=9))
+
+def kst_now():
+    """한국 시간으로 현재 시간 반환"""
+    return datetime.now(KST)
 
 class ProtectionAlgorithm(Enum):
     RobustWide = "RobustWide"
     EditGuard = "EditGuard"
-    FAKEFACE = "FAKEFACE"
+    PhotoGuard = "PhotoGuard"
 
 class User(Base):
     __tablename__ = "user"
@@ -18,7 +24,7 @@ class User(Base):
     email = Column(String(255), nullable=False, unique=True)
     password = Column(String(255), nullable=False)
     api_key = Column(String(255), nullable=True, unique=True)
-    time_created = Column(DateTime(timezone=True), server_default=func.now())
+    time_created = Column(DateTime(timezone=True), default=kst_now)
     
 
 class Image(Base):
@@ -29,7 +35,7 @@ class Image(Base):
     copyright = Column(String(255), nullable=True)
     protection_algorithm = Column(SQLEnum(ProtectionAlgorithm), nullable=True)
     use_openapi = Column(Boolean, nullable=False, default=False)
-    time_created = Column(DateTime(timezone=True), server_default=func.now())
+    time_created = Column(DateTime(timezone=True), default=kst_now)
 
 class ValidationRecord(Base):
     __tablename__ = "validation_record"
@@ -43,4 +49,4 @@ class ValidationRecord(Base):
     validation_algorithm = Column(SQLEnum(ProtectionAlgorithm), nullable=True)
     user_report_link = Column(String(2000), nullable=True)
     user_report_text = Column(Text, nullable=True)
-    time_created = Column(DateTime(timezone=True), server_default=func.now())
+    time_created = Column(DateTime(timezone=True), default=kst_now)

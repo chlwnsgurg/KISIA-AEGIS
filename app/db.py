@@ -7,7 +7,12 @@ database = Database(ASYNC_DATABASE_URL)
 metadata = MetaData()
 
 # 테이블 자동 생성 (동기)
-engine = create_engine(SYNC_DATABASE_URL)
+engine = create_engine(
+    SYNC_DATABASE_URL,
+    connect_args={
+        "init_command": "SET time_zone = '+09:00'"
+    }
+)
 # Base.metadata.drop_all(bind=engine)      # 모든 테이블 삭제
 Base.metadata.create_all(bind=engine)    # 모든 테이블 새로 생성
 

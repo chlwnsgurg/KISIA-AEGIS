@@ -81,6 +81,8 @@ class ImageService:
         # 트랜잭션으로 전체 과정 처리
         async with database.transaction():
             # 1. DB에 이미지 정보 저장 (트랜잭션 내부)
+            from app.models import kst_now
+            
             query = (
                 sqlalchemy.insert(Image)
                 .values(
@@ -88,7 +90,8 @@ class ImageService:
                     copyright=copyright, 
                     filename=original_filename,
                     protection_algorithm=protection_enum,
-                    use_openapi=False
+                    use_openapi=False,
+                    time_created=kst_now()
                 )
                 .returning(Image)
             )
@@ -166,6 +169,8 @@ class ImageService:
         # 트랜잭션으로 전체 과정 처리
         async with database.transaction():
             # 1. DB에 이미지 정보 저장 (트랜잭션 내부)
+            from app.models import kst_now
+            
             query = (
                 sqlalchemy.insert(Image)
                 .values(
@@ -173,7 +178,8 @@ class ImageService:
                     copyright=copyright, 
                     filename=original_filename,
                     protection_algorithm=protection_enum,
-                    use_openapi=True
+                    use_openapi=True,
+                    time_created=kst_now()
                 )
                 .returning(Image)
             )
@@ -233,12 +239,18 @@ class ImageService:
             # 이미지를 base64로 인코딩
             image_b64 = base64.b64encode(image_content).decode('utf-8')
 
-            # FAKEFACE 알고리즘은 테스트용으로 더미 처리
-            if model == ProtectionAlgorithm.FAKEFACE:
-                logger.info(f"FAKEFACE 테스트: 입력 이미지를 그대로 반환 (이미지 크기: {len(image_content)} bytes)")
-                # 테스트용으로 원본 이미지를 그대로 반환
-                return image_content
+            # PhotoGuard 알고리즘은 AI_IP2 사용, 나머지는 AI_IP 사용
+            if model == ProtectionAlgorithm.PhotoGuard:
+                ai_server_url = settings.AI_IP2
+                logger.info(f"PhotoGuard 알고리즘: AI_IP2({ai_server_url}) 사용")
+                # PhotoGuard는 BCH 인코딩 없이 이미지만 전송
+                payload = {
+                    "image": image_b64,
+                    "model": model.value
+                }
             else:
+                ai_server_url = settings.AI_IP
+                logger.info(f"{model.value} 알고리즘: AI_IP({ai_server_url}) 사용")
                 # RobustWide, EditGuard는 기존 로직 사용
                 # id 인코딩
                 n = 63
@@ -257,12 +269,12 @@ class ImageService:
                     "model": model.value
                 }
             
-                # AI 서버에 요청
-                async with httpx.AsyncClient(timeout=60.0) as client:
-                    response = await client.post(
-                        f"{settings.AI_IP}/upload",
-                        json=payload
-                    )
+            # AI 서버에 요청
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                response = await client.post(
+                    f"{ai_server_url}/upload",
+                    json=payload
+                )
                 
                 if response.status_code != 200:
                     raise HTTPException(
@@ -453,6 +465,10 @@ class ImageService:
             # 이미지를 base64로 인코딩
             image_b64 = base64.b64encode(image_content).decode('utf-8')
             
+            # RobustWide, EditGuard 검증은 AI_IP 사용
+            ai_server_url = settings.AI_IP
+            logger.info(f"{model.value} 검증: AI_IP({ai_server_url}) 사용")
+            
             # AI 서버로 전송할 데이터 구성
             payload = {
                 "sr_h": image_b64,
@@ -462,7 +478,7 @@ class ImageService:
             # AI 서버에 요청
             async with httpx.AsyncClient(timeout=60.0) as client:
                 response = await client.post(
-                    f"{settings.AI_IP}/verify",
+                    f"{ai_server_url}/verify",
                     json=payload
                 )
                 

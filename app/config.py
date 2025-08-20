@@ -44,11 +44,11 @@ class Settings:
     
     @property
     def async_database_url(self) -> str:
-        return f"mysql+asyncmy://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+        return f"mysql+asyncmy://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}?charset=utf8mb4&init_command=SET time_zone = '+09:00'"
     
     @property
     def sync_database_url(self) -> str:
-        return f"mysql+pymysql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+        return f"mysql+pymysql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}?charset=utf8mb4"
     
     # JWT Settings
     JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY")
@@ -77,6 +77,7 @@ class Settings:
     
     # AI Server Settings
     AI_IP: str = os.getenv("AI_IP")
+    AI_IP2: str = os.getenv("AI_IP2")
     
     # Email Settings
     SMTP_HOST: str = os.getenv("SMTP_HOST")
@@ -113,6 +114,7 @@ DB_NAME = settings.DB_NAME
 ASYNC_DATABASE_URL = settings.async_database_url
 SYNC_DATABASE_URL = settings.sync_database_url 
 AI_IP = settings.AI_IP
+AI_IP2 = settings.AI_IP2
 
 
 

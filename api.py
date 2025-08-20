@@ -126,8 +126,8 @@ async def get_algorithms():
             "title": "어떤 공격에도 원본임을 지켜내야 할 때",
             "description": "강력한 AI 편집 공격에도 워터마크가 훼손되지 않는 최고의 생존력\n웹툰, 캐릭터 등 고부가가치 IP 자산이나 브랜드 로고를 보호할 때 가장 효과적"
         },
-        "FAKEFACE": {
-            "name": "FAKEFACE",
+        "PhotoGuard": {
+            "name": "PhotoGuard",
             "title": "얼굴 딥페이크 방지가 필요할 때",
             "description": "얼굴을 딥페이크할 수 없게 하는 모델입니다\n인물 사진이나 프로필 이미지를 악용한 딥페이크 생성을 방지할 때 사용"
         }
@@ -512,6 +512,7 @@ async def get_user_report_statistics(
 
 # OPEN API 엔드포인트들 (API 키 기반 인증)
 @router.post("/open/generate",
+    tags=["🔒 워터마크 생성"],
     summary="OPEN API 이미지 생성",
     description="API 키를 사용하여 이미지를 업로드하고 워터마크를 적용합니다.",
     response_model=BaseResponse,
@@ -524,7 +525,7 @@ async def get_user_report_statistics(
 )
 async def open_generate_image(
     copyright: str = Form(..., description="저작권 정보", max_length=255),
-    protection_algorithm: str = Form(..., description="보호 알고리즘 (EditGuard, RobustWide, FAKEFACE)"),
+    protection_algorithm: str = Form(..., description="보호 알고리즘 (EditGuard, RobustWide, PhotoGuard)"),
     file: UploadFile = File(..., description="업로드할 PNG 파일 (최대 10MB)"),
     x_api_key: str = Header(..., alias="X-API-Key", description="API 키")
 ):
@@ -538,6 +539,7 @@ async def open_generate_image(
 
 
 @router.post("/open/verify", 
+    tags=["🔍 이미지 검증"],
     summary="OPEN API 이미지 검증",
     description="API 키를 사용하여 이미지의 위변조 여부를 검증합니다.",
     response_model=BaseResponse,
@@ -550,7 +552,7 @@ async def open_generate_image(
 )
 async def open_verify_image(
     file: UploadFile = File(..., description="검증할 PNG 파일"),
-    model: str = Form(..., description="보호 알고리즘 (EditGuard, RobustWide, FAKEFACE)"),
+    model: str = Form(..., description="보호 알고리즘 (EditGuard, RobustWide)"),
     x_api_key: str = Header(..., alias="X-API-Key", description="API 키")
 ):
     """API 키를 사용한 이미지 검증"""

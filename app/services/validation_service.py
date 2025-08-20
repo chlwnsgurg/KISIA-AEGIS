@@ -173,6 +173,8 @@ class ValidationService:
             # ValidationRecord에 결과 저장
             validation_uuid = str(uuid.uuid4())
             
+            from app.models import kst_now
+            
             query = sqlalchemy.insert(ValidationRecord).values(
                 uuid=validation_uuid,
                 user_id=int(user_id),
@@ -180,7 +182,8 @@ class ValidationService:
                 has_watermark=ai_response.has_watermark,
                 detected_watermark_image_id=ai_response.detected_watermark_image_id,
                 modification_rate=ai_response.modification_rate,
-                validation_algorithm=validation_enum
+                validation_algorithm=validation_enum,
+                time_created=kst_now()
             ).returning(ValidationRecord)
 
 
