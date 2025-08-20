@@ -31,7 +31,7 @@ export default function HomePage() {
                 </span>
               </h1>
               <p className="text-lg md:text-xl mb-8 text-gray-200 max-w-lg">
-                딥러닝 기반 보이지 않는 표식이 원본의 소유권을 지켜주고, 조작의 흔적은 눈에 보이는 증거로 드러냅니다.
+                원본의 소유권은 보이지 않게 지켜주고, 조작의 흔적은 명백한 증거로 보여줍니다.
               </p>
             </div>
             <div className="relative">
