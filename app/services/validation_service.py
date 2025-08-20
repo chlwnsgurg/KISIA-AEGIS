@@ -1112,98 +1112,112 @@ class ValidationService:
         logger.info(f"User {user_id} requesting integrated validation summary with limit {limit}, offset {offset}")
         
         try:
-            # 통합 쿼리 (UNION 사용)
-            unified_query = sqlalchemy.text("""
-                (
-                    SELECT 
-                        vr.id,
-                        vr.uuid,
-                        vr.user_id,
-                        vr.input_image_filename,
-                        vr.has_watermark,
-                        vr.detected_watermark_image_id,
-                        vr.modification_rate,
-                        vr.validation_algorithm,
-                        vr.time_created,
-                        vr.user_report_link,
-                        vr.user_report_text,
-                        CASE 
-                            WHEN i.user_id = :user_id THEN 3
-                            ELSE 1
-                        END as relation_type,
-                        i.user_id as original_image_owner_id,
-                        i.filename as original_image_filename,
-                        i.copyright as original_image_copyright
-                    FROM validation_record vr
-                    LEFT JOIN image i ON vr.detected_watermark_image_id = i.id
-                    WHERE vr.user_id = :user_id
-                )
-                UNION
-                (
-                    SELECT 
-                        vr.id,
-                        vr.uuid,
-                        vr.user_id,
-                        vr.input_image_filename,
-                        vr.has_watermark,
-                        vr.detected_watermark_image_id,
-                        vr.modification_rate,
-                        vr.validation_algorithm,
-                        vr.time_created,
-                        vr.user_report_link,
-                        vr.user_report_text,
-                        2 as relation_type,
-                        i.user_id as original_image_owner_id,
-                        i.filename as original_image_filename,
-                        i.copyright as original_image_copyright
-                    FROM validation_record vr
-                    INNER JOIN image i ON vr.detected_watermark_image_id = i.id
-                    WHERE i.user_id = :user_id AND vr.user_id != :user_id
-                )
-                ORDER BY time_created DESC
-                LIMIT :limit OFFSET :offset
-            """)
+            from app.models import Image
             
-            records = await database.fetch_all(
-                unified_query,
-                values={"user_id": int(user_id), "limit": limit, "offset": offset}
+            # 모든 레코드를 하나의 리스트로 수집
+            all_records = []
+            
+            # 1. 내가 검증한 레코드들 조회
+            my_validation_query = (
+                ValidationRecord.__table__.select()
+                .where(ValidationRecord.user_id == int(user_id))
+                .order_by(ValidationRecord.time_created.desc())
             )
+            my_validation_records = await database.fetch_all(my_validation_query)
             
-            # 통계 데이터 계산
-            stats_query = sqlalchemy.text("""
-                SELECT 
-                    COUNT(DISTINCT CASE WHEN relation_type = 1 THEN id END) as my_validations,
-                    COUNT(DISTINCT CASE WHEN relation_type = 2 THEN id END) as my_image_validations,
-                    COUNT(DISTINCT CASE WHEN relation_type = 3 THEN id END) as self_validations,
-                    COUNT(DISTINCT id) as total_records
-                FROM (
-                    (
-                        SELECT 
-                            vr.id,
-                            CASE 
-                                WHEN i.user_id = :user_id THEN 3
-                                ELSE 1
-                            END as relation_type
-                        FROM validation_record vr
-                        LEFT JOIN image i ON vr.detected_watermark_image_id = i.id
-                        WHERE vr.user_id = :user_id
+            # 2. 내 이미지가 검증된 레코드들 조회 (내가 검증한 것 제외)
+            my_image_validation_query = (
+                ValidationRecord.__table__.select()
+                .select_from(
+                    ValidationRecord.__table__.join(
+                        Image.__table__, 
+                        ValidationRecord.detected_watermark_image_id == Image.id
                     )
-                    UNION
-                    (
-                        SELECT 
-                            vr.id,
-                            2 as relation_type
-                        FROM validation_record vr
-                        INNER JOIN image i ON vr.detected_watermark_image_id = i.id
-                        WHERE i.user_id = :user_id AND vr.user_id != :user_id
+                )
+                .where(
+                    sqlalchemy.and_(
+                        Image.user_id == int(user_id),
+                        ValidationRecord.user_id != int(user_id)
                     )
-                ) as unified_stats
-            """)
-            
-            stats_result = await database.fetch_one(
-                stats_query, 
-                values={"user_id": int(user_id)}
+                )
+                .order_by(ValidationRecord.time_created.desc())
             )
+            my_image_validation_records = await database.fetch_all(my_image_validation_query)
+            
+            # 각 레코드에 relation_type과 원본 이미지 정보 추가
+            for record in my_validation_records:
+                record_dict = dict(record)
+                
+                # 원본 이미지 정보 조회
+                if record_dict["detected_watermark_image_id"]:
+                    image_query = (
+                        Image.__table__.select()
+                        .where(Image.id == record_dict["detected_watermark_image_id"])
+                    )
+                    image_record = await database.fetch_one(image_query)
+                    
+                    if image_record:
+                        # 내가 검증했고 대상도 내 이미지인 경우 (relation_type = 3)
+                        if image_record["user_id"] == int(user_id):
+                            record_dict["relation_type"] = 3
+                        else:
+                            record_dict["relation_type"] = 1
+                        
+                        record_dict["original_image_owner_id"] = image_record["user_id"]
+                        record_dict["original_image_filename"] = image_record["filename"]
+                        record_dict["original_image_copyright"] = image_record["copyright"]
+                    else:
+                        record_dict["relation_type"] = 1
+                        record_dict["original_image_owner_id"] = None
+                        record_dict["original_image_filename"] = None
+                        record_dict["original_image_copyright"] = None
+                else:
+                    record_dict["relation_type"] = 1
+                    record_dict["original_image_owner_id"] = None
+                    record_dict["original_image_filename"] = None
+                    record_dict["original_image_copyright"] = None
+                
+                all_records.append(record_dict)
+            
+            # 내 이미지가 검증된 레코드들 처리 (relation_type = 2)
+            for record in my_image_validation_records:
+                record_dict = dict(record)
+                record_dict["relation_type"] = 2
+                
+                # 원본 이미지 정보 조회
+                if record_dict["detected_watermark_image_id"]:
+                    image_query = (
+                        Image.__table__.select()
+                        .where(Image.id == record_dict["detected_watermark_image_id"])
+                    )
+                    image_record = await database.fetch_one(image_query)
+                    
+                    if image_record:
+                        record_dict["original_image_owner_id"] = image_record["user_id"]
+                        record_dict["original_image_filename"] = image_record["filename"]
+                        record_dict["original_image_copyright"] = image_record["copyright"]
+                    else:
+                        record_dict["original_image_owner_id"] = None
+                        record_dict["original_image_filename"] = None
+                        record_dict["original_image_copyright"] = None
+                else:
+                    record_dict["original_image_owner_id"] = None
+                    record_dict["original_image_filename"] = None
+                    record_dict["original_image_copyright"] = None
+                
+                all_records.append(record_dict)
+            
+            # 시간순 정렬
+            all_records.sort(key=lambda x: x["time_created"], reverse=True)
+            
+            # 페이지네이션 적용
+            records = all_records[offset:offset + limit]
+            
+            # 통계 계산
+            my_validations_count = len([r for r in all_records if r["relation_type"] == 1])
+            my_image_validations_count = len([r for r in all_records if r["relation_type"] == 2])
+            self_validations_count = len([r for r in all_records if r["relation_type"] == 3])
+            total_records_count = len(all_records)
             
             # 응답 데이터 구성
             validation_records = []
@@ -1229,16 +1243,53 @@ class ValidationService:
                 }
                 validation_records.append(record_data)
             
+            # relation_type별로 분류
+            all_records_list = []  # 전체보기
+            my_validations_list = []  # 내가 검증한 것만 (relation_type 1)
+            my_image_validations_list = []  # 다른사람이 내 이미지 검증한 것 (relation_type 2)
+            self_validations_list = []  # 내가 검증했고 이미지도 내거 (relation_type 3)
+            
+            for record_data in validation_records:
+                all_records_list.append(record_data)
+                
+                if record_data["relation_type"] == 1:
+                    my_validations_list.append(record_data)
+                elif record_data["relation_type"] == 2:
+                    my_image_validations_list.append(record_data)
+                elif record_data["relation_type"] == 3:
+                    self_validations_list.append(record_data)
+            
             # 요약 정보 구성
             summary_data = {
                 "user_statistics": {
-                    "my_validations_count": stats_result["my_validations"] or 0,  # 내가 검증한 것 (relation_type 1)
-                    "my_image_validations_count": stats_result["my_image_validations"] or 0,  # 내 이미지가 검증된 것 (relation_type 2)  
-                    "self_validations_count": stats_result["self_validations"] or 0,  # 내가 내 이미지를 검증한 것 (relation_type 3)
-                    "total_records_count": stats_result["total_records"] or 0,
+                    "my_validations_count": my_validations_count,  # 내가 검증한 것 (relation_type 1)
+                    "my_image_validations_count": my_image_validations_count,  # 내 이미지가 검증된 것 (relation_type 2)  
+                    "self_validations_count": self_validations_count,  # 내가 내 이미지를 검증한 것 (relation_type 3)
+                    "total_records_count": total_records_count,
                     "returned_records_count": len(validation_records)
                 },
-                "validation_records": validation_records,
+                "validation_lists": {
+                    "all": {
+                        "name": "전체보기",
+                        "count": len(all_records_list),
+                        "records": all_records_list
+                    },
+                    "my_validations": {
+                        "name": "내가 검증한 내역",
+                        "count": len(my_validations_list),
+                        "records": my_validations_list
+                    },
+                    "my_image_validations": {
+                        "name": "타인이 검증한 내 이미지 내역",
+                        "count": len(my_image_validations_list),
+                        "records": my_image_validations_list
+                    },
+                    "self_validations": {
+                        "name": "내가 검증한 내 이미지 내역",
+                        "count": len(self_validations_list),
+                        "records": self_validations_list
+                    }
+                },
                 "relation_types": {
                     "1": "내가 검증한 데이터",
                     "2": "내 이미지가 검증된 데이터", 
