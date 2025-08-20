@@ -801,6 +801,426 @@ class EmailService:
         
         return await self.send_email(user_email, subject, html_body, is_html=True)
 
+    async def send_original_confirmation_email(
+        self,
+        user_email: str,
+        username: str,
+        confirmation_info: dict,
+        report_url: str,
+        image_url: str = None,
+        original_image_info: dict = None
+    ) -> bool:
+        """원본 확인 시 원저작자에게 알림 이메일 발송"""
+        
+        confirmation_time = confirmation_info.get('confirmation_time', 'N/A')
+        image_name = confirmation_info.get('image_name', 'N/A')
+        image_number = confirmation_info.get('image_number', 'N/A')
+        verification_method = confirmation_info.get('verification_method', 'AI 분석')
+        
+        # 원본 이미지 정보
+        original_info = original_image_info or {}
+        original_image_id = original_info.get('image_id', 'N/A')
+        original_filename = original_info.get('filename', 'N/A')
+        upload_time = original_info.get('upload_time', 'N/A')
+        copyright_info = original_info.get('copyright_info', '저작권자 정보 없음')
+        watermark_image_url = original_info.get('watermark_image_url', '')
+        
+        # 이메일 제목에 이미지 번호 포함
+        subject = f"✅ [알림] 이미지 #{original_image_id} 원본 확인 알림"
+        
+        html_body = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+                * {{
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }}
+                body {{
+                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+                    line-height: 1.6;
+                    color: #1a1a1a;
+                    background: #0a0a0a;
+                    padding: 20px;
+                }}
+                .email-container {{
+                    max-width: 600px;
+                    margin: 0 auto;
+                    background: #ffffff;
+                    border-radius: 24px;
+                    overflow: hidden;
+                    border: 2px solid #10b981;
+                    box-shadow: 0 20px 60px rgba(16, 185, 129, 0.1);
+                }}
+                .header {{
+                    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                    padding: 40px 40px;
+                    text-align: center;
+                    position: relative;
+                }}
+                .header::before {{
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="success" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="2" fill="white" opacity="0.1"/><path d="M6,10 L9,13 L14,8" stroke="white" stroke-width="0.5" fill="none" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23success)"/></svg>');
+                }}
+                .logo-container {{
+                    margin-bottom: 20px;
+                    position: relative;
+                    z-index: 1;
+                }}
+                .logo {{
+                    height: 60px;
+                    width: auto;
+                    filter: brightness(0) invert(1);
+                }}
+                .success-icon {{
+                    font-size: 48px;
+                    margin-bottom: 16px;
+                    display: block;
+                    position: relative;
+                    z-index: 1;
+                }}
+                .header-title {{
+                    font-size: 28px;
+                    font-weight: 700;
+                    color: #ffffff;
+                    margin-bottom: 8px;
+                    letter-spacing: -0.01em;
+                    position: relative;
+                    z-index: 1;
+                }}
+                .header-subtitle {{
+                    font-size: 16px;
+                    color: #d1fae5;
+                    font-weight: 400;
+                    position: relative;
+                    z-index: 1;
+                }}
+                .content {{
+                    padding: 40px 40px;
+                    background: #ffffff;
+                }}
+                .success-section {{
+                    background: #f0fdf4;
+                    border: 2px solid #10b981;
+                    border-radius: 16px;
+                    padding: 24px;
+                    margin-bottom: 32px;
+                    text-align: center;
+                }}
+                .success-title {{
+                    font-size: 20px;
+                    font-weight: 600;
+                    color: #10b981;
+                    margin-bottom: 12px;
+                }}
+                .success-message {{
+                    font-size: 16px;
+                    color: #166534;
+                    line-height: 1.5;
+                }}
+                .user-greeting {{
+                    font-size: 18px;
+                    color: #1f2937;
+                    margin-bottom: 24px;
+                }}
+                .confirmation-details {{
+                    background: #f9fafb;
+                    border: 1px solid #e5e7eb;
+                    border-radius: 16px;
+                    padding: 24px;
+                    margin: 24px 0;
+                }}
+                .details-title {{
+                    font-size: 18px;
+                    font-weight: 600;
+                    color: #1f2937;
+                    margin-bottom: 20px;
+                    text-align: center;
+                }}
+                .details-table {{
+                    width: 100%;
+                    border-collapse: collapse;
+                    background: transparent;
+                }}
+                .details-table tr {{
+                    border-bottom: 1px solid #e5e7eb;
+                }}
+                .details-table tr:last-child {{
+                    border-bottom: none;
+                }}
+                .details-table td {{
+                    padding: 16px 0;
+                    vertical-align: top;
+                    background: transparent;
+                }}
+                .detail-label {{
+                    font-size: 13px;
+                    color: #6b7280;
+                    font-weight: 500;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                    padding-bottom: 8px;
+                    display: block;
+                }}
+                .detail-value {{
+                    font-size: 15px;
+                    color: #1f2937;
+                    font-weight: 600;
+                    line-height: 1.4;
+                }}
+                .status-confirmed {{
+                    color: #10b981;
+                }}
+                .image-preview {{
+                    text-align: center;
+                    margin: 24px 0;
+                    background: #f9fafb;
+                    border: 1px solid #e5e7eb;
+                    border-radius: 16px;
+                    padding: 24px;
+                }}
+                .image-preview img {{
+                    max-width: 300px;
+                    height: auto;
+                    border-radius: 8px;
+                    border: 2px solid #10b981;
+                }}
+                .image-caption {{
+                    font-size: 12px;
+                    color: #6b7280;
+                    margin-top: 12px;
+                }}
+                .action-title {{
+                    font-size: 18px;
+                    font-weight: 600;
+                    color: #1f2937;
+                    margin-bottom: 16px;
+                }}
+                .btn-primary {{
+                    display: inline-block;
+                    padding: 14px 24px;
+                    background: #10b981;
+                    color: #ffffff;
+                    text-decoration: none;
+                    border-radius: 12px;
+                    font-weight: 500;
+                    font-size: 14px;
+                    transition: all 0.3s ease;
+                    margin: 8px;
+                }}
+                .btn-primary:hover {{
+                    background: #059669;
+                    transform: translateY(-1px);
+                }}
+                .btn-secondary {{
+                    display: inline-block;
+                    padding: 14px 24px;
+                    background: #ffffff;
+                    color: #374151;
+                    text-decoration: none;
+                    border: 1px solid #d1d5db;
+                    border-radius: 12px;
+                    font-weight: 500;
+                    font-size: 14px;
+                    transition: all 0.3s ease;
+                    margin: 8px;
+                }}
+                .btn-secondary:hover {{
+                    background: #f9fafb;
+                    transform: translateY(-1px);
+                }}
+                .action-section {{
+                    background: #f9fafb;
+                    border: 1px solid #e5e7eb;
+                    border-radius: 16px;
+                    padding: 24px;
+                    margin: 24px 0;
+                    text-align: center;
+                }}
+                .cta-buttons {{
+                    display: flex;
+                    gap: 16px;
+                    justify-content: center;
+                    margin: 24px 0;
+                    flex-wrap: wrap;
+                    text-align: center;
+                }}
+                .security-notice {{
+                    background: #f0fdf4;
+                    border: 1px solid #d1fae5;
+                    border-radius: 12px;
+                    padding: 20px;
+                    margin: 24px 0;
+                }}
+                .security-notice p {{
+                    color: #166534;
+                    font-size: 14px;
+                    margin-bottom: 8px;
+                }}
+                .footer {{
+                    padding: 32px 40px;
+                    background: #f9fafb;
+                    text-align: center;
+                    border-top: 1px solid #e5e7eb;
+                }}
+                .footer-text {{
+                    font-size: 12px;
+                    color: #6b7280;
+                    margin-bottom: 8px;
+                }}
+                .copyright {{
+                    font-size: 12px;
+                    color: #9ca3af;
+                }}
+                @media (max-width: 600px) {{
+                    .content {{
+                        padding: 24px 20px;
+                    }}
+                    .header {{
+                        padding: 24px 20px;
+                    }}
+                    .cta-buttons {{
+                        flex-direction: column;
+                    }}
+                    .footer {{
+                        padding: 24px 20px;
+                    }}
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="email-container">
+                <div class="header">
+                    <div class="logo-container">
+                        <img src="https://aegis.gdgoc.com/AEGIS.png" alt="Aegis Logo" class="logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <div style="display: none; font-size: 24px; font-weight: 700; color: #ffffff;">AEGIS</div>
+                    </div>
+                    <span class="success-icon">✅</span>
+                    <h1 class="header-title">원본 사진 확인</h1>
+                    <p class="header-subtitle">이미지 원본성이 검증되었습니다</p>
+                </div>
+                
+                <div class="content">
+                    <p class="user-greeting">안녕하세요, {username}님</p>
+                    
+                    <div class="success-section">
+                        <h2 class="success-title">🎉 좋은 소식입니다!</h2>
+                        <p class="success-message">
+                            귀하의 이미지에서 원본 사진을 확인한 내역이 발생하였습니다.<br>
+                            이미지가 원본 상태로 잘 보호되고 있습니다.
+                        </p>
+                    </div>
+                    
+                    <div class="confirmation-details">
+                        <h3 class="details-title">확인 상세 정보</h3>
+                        <table class="details-table">
+                            <tr>
+                                <td>
+                                    <span class="detail-label">확인 시간</span>
+                                    <span class="detail-value">{confirmation_time}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <span class="detail-label">이미지 파일명</span>
+                                    <span class="detail-value">{image_name}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <span class="detail-label">원본 상태</span>
+                                    <span class="detail-value status-confirmed">✅ 원본 확인됨</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <span class="detail-label">검증 방법</span>
+                                    <span class="detail-value">{verification_method}</span>
+                                </td>
+                            </tr>
+                            {"<tr><td style='padding-top: 24px; text-align: center;'><span class='detail-label' style='display: block; margin-bottom: 16px;'>검증된 이미지</span><img src='" + image_url + "' alt='검증된 이미지' style='max-width: 300px; height: auto; border-radius: 8px; border: 2px solid #10b981; display: block; margin: 0 auto;'><p style='color: #6b7280; font-size: 12px; margin-top: 8px;'>※ 원본 확인된 이미지</p></td></tr>" if image_url else ""}
+                        </table>
+                    </div>
+                    
+                    <div class="confirmation-details">
+                        <h3 class="details-title">보호된 원본 이미지 정보</h3>
+                        <table class="details-table">
+                            <tr>
+                                <td>
+                                    <span class="detail-label">이미지 ID</span>
+                                    <span class="detail-value">{original_image_id}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <span class="detail-label">원본 파일명</span>
+                                    <span class="detail-value">{original_filename}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <span class="detail-label">업로드 시간</span>
+                                    <span class="detail-value">{upload_time}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <span class="detail-label">저작권 정보</span>
+                                    <span class="detail-value">{copyright_info}</span>
+                                </td>
+                            </tr>
+                        </table>
+                        
+                        <div style="margin-top: 24px; text-align: center;">
+                            <h4 style="color: #1f2937; margin-bottom: 16px;">워터마크 이미지</h4>
+                            <div style="justify-content: center; align-items: center;">
+                                {"<div style='text-align: center;'><img src='" + watermark_image_url + "' alt='워터마크 이미지' style='max-width: 300px; height: auto; border-radius: 8px; border: 2px solid #10b981; display: block; margin: 0 auto;'><p style='color: #6b7280; font-size: 12px; margin-top: 8px;'>워터마크</p></div>" if watermark_image_url else ""}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="action-section">
+                        <h3 class="action-title">상세 정보 확인</h3>
+                        
+                        <div class="cta-buttons">
+                            <a href="{report_url}" class="btn-primary">
+                                📊 상세 보고서 확인
+                            </a>
+                            <a href="mailto:kisiaaegis@gmail.com?subject=원본%20확인%20문의&body=안녕하세요.%20원본%20확인에%20관련하여%20문의드립니다." class="btn-secondary">
+                                💬 지원팀 문의
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="security-notice">
+                        <p style="font-weight: 600; margin-bottom: 12px;">🛡️ 보안 알림</p>
+                        <p>이 알림은 귀하의 이미지가 원본 상태로 확인되었음을 알려드리는 것입니다.</p>
+                        <p>이미지 보안에 대한 추가 질문이 있으시면 언제든지 문의하세요.</p>
+                    </div>
+                    
+                </div>
+                
+                <div class="footer">
+                    <p class="footer-text">이 메일은 원본 확인 시 자동으로 발송된 메일입니다.</p>
+                    <p class="footer-text">문의: kisiaaegis@gmail.com</p>
+                    <p class="copyright">&copy; 2025 Aegis Security System. All rights reserved.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        return await self.send_email(user_email, subject, html_body, is_html=True)
+
     async def send_weekly_statistics_email(
         self, 
         user_email: str, 
