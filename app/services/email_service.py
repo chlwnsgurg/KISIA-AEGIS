@@ -75,7 +75,7 @@ class EmailService:
                 msg['Cc'] = ', '.join(cc)
             if bcc:
                 msg['Bcc'] = ', '.join(bcc)
-            
+
             if is_html:
                 msg.attach(MIMEText(body, 'html'))
             else:
@@ -733,7 +733,7 @@ class EmailService:
                                     <span class="detail-value">{detection_method}</span>
                                 </td>
                             </tr>
-                            {"<tr><td style='padding-top: 24px; text-align: center;'><span class='detail-label' style='display: block; margin-bottom: 16px;'>검출된 위변조 이미지</span><img src='" + image_url + "' alt='검출된 위변조 이미지' style='max-width: 300px; height: auto; border-radius: 8px; border: 2px solid #dc2626; display: block; margin: 0 auto;'><p style='color: #888; font-size: 12px; margin-top: 8px;'>※ 위변조가 의심되는 이미지</p></td></tr>" if image_url else ""}
+                            {"<tr><td style='padding-top: 24px; text-align: center;'><span class='detail-label' style='display: block; margin-bottom: 16px;'>검출된 위변조 이미지</span><img src='" + image_url + "' alt='검출된 위변조 이미지' style='max-width: 300px; height: auto; border-radius: 8px; border: 2px solid #dc2626; display: block; margin: 0 auto;'><p style='color: #888; font-size: 12px; margin-top: 8px;'>※ 위변조 이미지</p></td></tr>" if image_url else ""}
                         </table>
                     </div>
                     
