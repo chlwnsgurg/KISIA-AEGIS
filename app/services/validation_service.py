@@ -14,7 +14,7 @@ import sqlalchemy
 from app.config import settings
 from app.db import database
 from app.models import ValidationRecord, Image, ProtectionAlgorithm
-from app.schemas import BaseResponse, AIValidationResponse
+from app.schemas import BaseResponse, AIValidationResponse, UserReportRequest, UserReportResponse
 from app.services.auth_service import auth_service
 from app.services.image_service import ImageService
 from app.services.storage_service import storage_service
@@ -897,7 +897,9 @@ class ValidationService:
                 "validation_algorithm": record["validation_algorithm"],
                 "validation_time": record["time_created"].isoformat(),
                 "s3_path": f"{settings.s3_record_dir}/{record['uuid']}/{record['input_image_filename']}",
-                "s3_mask_url": f"{settings.s3_record_dir}/{record['uuid']}/mask.png"
+                "s3_mask_url": f"{settings.s3_record_dir}/{record['uuid']}/mask.png",
+                "user_report_link": record["user_report_link"],
+                "user_report_text": record["user_report_text"]
             }
             
             logger.info(f"Public retrieved validation record: {validation_uuid}")
@@ -1015,6 +1017,92 @@ class ValidationService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"검증 레코드 조회 중 오류가 발생했습니다: {str(e)}"
+            )
+
+    async def update_user_report(self, report_data: UserReportRequest, access_token: str) -> BaseResponse:
+        """사용자 제보 정보 업데이트"""
+        user_id = self.auth_service.get_user_id_from_token(access_token)
+        
+        logger.info(f"User {user_id} updating report for validation UUID: {report_data.validation_uuid}")
+        
+        try:
+            # 검증 레코드 조회 및 권한 확인
+            query = (
+                ValidationRecord.__table__.select()
+                .where(ValidationRecord.uuid.collate('utf8mb4_general_ci') == report_data.validation_uuid)
+            )
+            
+            record = await database.fetch_one(query)
+            
+            if not record:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="검증 레코드를 찾을 수 없습니다."
+                )
+            
+            # 해당 검증을 수행한 사용자인지 확인
+            if record["user_id"] != int(user_id):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="본인이 수행한 검증에 대해서만 제보할 수 있습니다."
+                )
+            
+            # 위변조가 검출된 검증인지 확인
+            if not record["has_watermark"] or not record["modification_rate"] or record["modification_rate"] <= 0:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="위변조가 검출되지 않은 검증에는 제보할 수 없습니다."
+                )
+            
+            # 사용자 제보 정보 업데이트
+            update_query = (
+                sqlalchemy.update(ValidationRecord)
+                .where(ValidationRecord.uuid.collate('utf8mb4_general_ci') == report_data.validation_uuid)
+                .values(
+                    user_report_link=report_data.report_link,
+                    user_report_text=report_data.report_text
+                )
+            )
+            
+            # MariaDB는 RETURNING을 지원하지 않으므로 별도로 UPDATE 후 SELECT
+            await database.execute(update_query)
+            
+            # 업데이트된 레코드 조회
+            select_query = (
+                ValidationRecord.__table__.select()
+                .where(ValidationRecord.uuid.collate('utf8mb4_general_ci') == report_data.validation_uuid)
+            )
+            updated_record = await database.fetch_one(select_query)
+            
+            if not updated_record:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="제보 정보 업데이트에 실패했습니다."
+                )
+            
+            logger.info(f"User report updated successfully for validation UUID: {report_data.validation_uuid}")
+            
+            # 응답 데이터 구성
+            response_data = UserReportResponse(
+                validation_uuid=report_data.validation_uuid,
+                report_link=report_data.report_link,
+                report_text=report_data.report_text,
+                updated_time=updated_record["time_created"].isoformat()
+            )
+            
+            return BaseResponse(
+                success=True,
+                description="사용자 제보 정보가 성공적으로 업데이트되었습니다.",
+                data=[response_data.model_dump()]
+            )
+            
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Failed to update user report for validation {report_data.validation_uuid}: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"제보 정보 업데이트 중 오류가 발생했습니다: {str(e)}"
             )
 
 

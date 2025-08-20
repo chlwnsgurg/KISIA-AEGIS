@@ -75,7 +75,7 @@ class EmailService:
                 msg['Cc'] = ', '.join(cc)
             if bcc:
                 msg['Bcc'] = ', '.join(bcc)
-
+            
             if is_html:
                 msg.attach(MIMEText(body, 'html'))
             else:

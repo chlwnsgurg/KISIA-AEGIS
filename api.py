@@ -2,7 +2,7 @@ import logging
 from fastapi import APIRouter, UploadFile, File, Security, Form, Depends
 from fastapi.security import APIKeyHeader
 
-from app.schemas import BaseResponse, UserCreate, UserLogin
+from app.schemas import BaseResponse, UserCreate, UserLogin, UserReportRequest
 from app.services.user_service import user_service
 from app.services.image_service import image_service
 from app.services.validation_service import validation_service
@@ -264,4 +264,22 @@ async def get_protection_algorithms():
         description="보호 알고리즘 목록을 조회했습니다.",
         data=algorithms
     )
+
+@router.put("/user-report",
+    summary="사용자 제보 정보 업데이트",
+    description="위변조 검출된 검증에 대해 사용자가 제보 정보를 추가/업데이트합니다.",
+    response_model=BaseResponse,
+    responses={
+        200: {"description": "제보 정보 업데이트 성공"},
+        400: {"description": "위변조가 검출되지 않은 검증이거나 잘못된 요청"},
+        401: {"description": "유효하지 않은 토큰"},
+        403: {"description": "권한 없음 - 본인이 수행한 검증만 제보 가능"},
+        404: {"description": "검증 레코드를 찾을 수 없음"}
+    }
+)
+async def update_user_report(
+    report_data: UserReportRequest,
+    access_token: str = Security(APIKeyHeader(name='access-token'))
+):
+    return await validation_service.update_user_report(report_data, access_token)
 
