@@ -757,7 +757,27 @@ export default function DemoPage() {
                       </div>
                       <div className="text-sm text-green-700">
                         <p><strong>알고리즘:</strong> {selectedAlgorithm}</p>
-                        <p><strong>결과:</strong> {JSON.stringify(verificationResult, null, 2)}</p>
+                        <p><strong>결과:</strong></p>
+                        <div className="mt-2 max-h-40 overflow-y-auto bg-white border border-green-300 rounded p-2">
+                          <pre className="text-xs whitespace-pre-wrap break-all">
+                            {JSON.stringify(
+                              {
+                                ...verificationResult,
+                                // base64 이미지 데이터는 길이만 표시
+                                ...(verificationResult.s3_images && {
+                                  s3_images: Object.entries(verificationResult.s3_images).reduce((acc, [key, value]) => {
+                                    acc[key] = typeof value === 'string' && value.startsWith('data:image/') 
+                                      ? `[BASE64 이미지 데이터 - ${value.length}자]` 
+                                      : value
+                                    return acc
+                                  }, {} as any)
+                                })
+                              }, 
+                              null, 
+                              2
+                            )}
+                          </pre>
+                        </div>
                       </div>
                     </div>
                   )}
