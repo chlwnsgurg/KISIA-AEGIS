@@ -1,0 +1,177 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 237 83% 26%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 174 100% 29%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 84% 37%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 237 83% 26%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 84% 4.9%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 174 100% 29%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+}
+
+/* Hero Section Gradient */
+.hero-gradient {
+  background: linear-gradient(162deg, rgba(26, 35, 126, 1) 0%, rgba(57, 73, 171, 1) 100%);
+  box-shadow: 0px 4px 4px #3542a1;
+}
+
+/* Main Hero Text Gradient */
+.hero-text-gradient {
+  background: linear-gradient(133deg, rgba(127, 191, 255, 1) 0%, rgba(255, 255, 255, 1) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-fill-color: transparent;
+}
+
+/* Ellipse Glow Effect */
+.hero-ellipse {
+  border-radius: 256.5px / 71px;
+  background: radial-gradient(50% 50% at 50% 47%, rgba(149, 202, 255, 0.8) 0%, rgba(223, 239, 255, 0.3) 54%, rgba(255, 255, 255, 0) 100%);
+}
+
+/* Service Card Gradients */
+.service-card-editguard {
+  background: linear-gradient(162deg, rgba(26, 35, 126, 1) 0%, rgba(57, 73, 171, 1) 100%);
+  box-shadow: 0px 4px 20px #a0b2c480;
+}
+
+.service-card {
+  box-shadow: 0px 4px 20px #a0b2c480;
+}
+
+/* Feature Tags */
+.feature-tag {
+  background-color: rgba(191, 219, 254, 0.5);
+  border-radius: 15px;
+  color: #0b1179;
+}
+
+/* Tech Cards */
+.tech-card-blue {
+  background: linear-gradient(162deg, rgba(26, 35, 126, 0.9) 0%, rgba(57, 73, 171, 0.9) 100%);
+  box-shadow: 0px 4px 20px #a1b2c440;
+}
+
+.tech-card-white {
+  background-color: #f8f9fa;
+  box-shadow: 0px 4px 20px #a1b2c440;
+}
+
+/* Section Divider - Triangle Element */
+.triangle-divider {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 107px;
+  z-index: 1;
+  overflow: hidden;
+}
+
+
+
+/* Large triangle arrow pointing to trust evidence section */
+.arrow-indicator {
+  position: relative;
+  width: 100%;
+  height: 80px;
+  z-index: 1;
+}
+
+.large-triangle-arrow {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 95%;
+  height: 80px;
+
+background: linear-gradient(
+  135deg,
+  rgba(114, 131, 152, 0.5) -50%,
+  rgba(191, 219, 254, 0.5) 50%
+  );
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+
+.comparison-slider {
+  position: relative;
+  overflow: hidden;
+  cursor: ew-resize;
+}
+
+.comparison-slider .slider-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: white;
+  z-index: 10;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.comparison-slider .slider-handle::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}

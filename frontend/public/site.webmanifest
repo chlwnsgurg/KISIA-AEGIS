@@ -1,0 +1,22 @@
+{
+  "name": "아이기스 - AI 편집도 속일 수 없는 워터마크 기술",
+  "short_name": "AEGIS",
+  "description": "원본의 소유권은 보이지 않게 지켜주고, 조작의 흔적은 명백한 증거로 보여줍니다.",
+  "icons": [
+    {
+      "src": "https://aegis.gdgoc.com/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://aegis.gdgoc.com/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "start_url": "/",
+  "scope": "/"
+}
