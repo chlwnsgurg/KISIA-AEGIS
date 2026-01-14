@@ -1,4 +1,4 @@
-<img width="94" height="39" alt="image" src="https://github.com/user-attachments/assets/3c124631-c06a-492d-a782-895453b46901" /><img width="534" height="60" alt="image" src="https://github.com/user-attachments/assets/c3b023ca-995f-471b-a9c2-d55aa1bf4846" /><p align="center">
+<p align="center">
 <img width="356" height="95" alt="image" src="https://github.com/user-attachments/assets/df015068-1eed-48ab-9c05-390fe4cc5712" />
 <p>
 
@@ -50,25 +50,25 @@ AEGIS는 딥러닝 기반 워터마킹 및 위변조 탐지 SaaS로, 주요 기�
 ## Core Idea
 <img width="1280" height="595" alt="Screenshot 2026-01-14 at 5 45 31 PM-Photoroom" src="https://github.com/user-attachments/assets/43b82e15-4b3e-4fdc-89ed-ceec60ba5256" />
 
-AEGIS의 핵심 아이디어는 Deep Learning과 Error Correction Code(ECC)를 결합하여 강인성(Robustness)과  
-신뢰성(Reliability)을 동시에 만족하는 새로운 워터마킹 프레임워크입니다.
+AEGIS의 핵심 아이디어는 Deep Learning과 Error Correction Code(ECC)를 결합하여 강인성(Robustness)과 신뢰성(Reliability)을 동시에 만족하는 새로운 워터마킹 프레임워크입니다.
 
 - **Deep Learning**  
-  - 다양한 공격(편집, 변형, 노이즈)에 대한 강인성 확보
+  - 다양한 공격(AI 편집, 압축, 노이즈, 등등)에 대한 강인성 확보
 - **Error Correction Code (ECC)**  
-  - 딥러닝 모델의 uncerntainty 특성을 보완하여 신뢰성 확보
+  - 딥러닝 모델의 본질적 불안정성을 보완하여 신뢰성 확보
+
+해당 프레임워크는 다양한 딥러닝 기반 워터마킹 모델과 호환되도록 설계되었으며, 본 레포에서는 두 개의 모델을 서비스로 제공하였다.
 
 ---
-
 ## Experimental Results
 
 ### 조작된 영역 시각화 성능 평가
-EditGuard 모델을 기반으로 서비스를 구동하였다.
+EditGuard 모델을 사용하였다.
 <img width="599" height="326" alt="Screenshot 2026-01-14 at 6 29 42 PM" src="https://github.com/user-attachments/assets/36efb2ac-3825-4f87-9c36-c057684c6131" />
 
 
 ### 공격 시나리오에서의 강건성 평가
-- RobustWide 모델을 기반으로 서비스를 구동하였다.
+RobustWide 모델을 사용하였다.
 <img width="643" height="308" alt="Screenshot 2026-01-14 at 6 30 30 PM" src="https://github.com/user-attachments/assets/7698d190-e905-411d-8796-a9f19f0fbcac" />
 
 ---
