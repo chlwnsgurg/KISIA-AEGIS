@@ -2,8 +2,9 @@
 <img width="356" height="95" alt="image" src="https://github.com/user-attachments/assets/df015068-1eed-48ab-9c05-390fe4cc5712" />
 <p>
 
+# AEGIS  
+**Robust & Reliable Image Watermarking Framework for the Generative AI Era**
 
-## Overview
 AEGIS는 생성형 AI 시대에 급증하는 **디지털 콘텐츠 위·변조 및 저작권 침해 문제**를 해결하기 위해 설계된  
 **딥러닝 기반 이미지 워터마킹 및 위변조 검증 시스템**입니다.  
 Deep Learning과 Error Correction Code(ECC)를 결합하여 **강인성(Robustness)**과  
@@ -139,4 +140,3 @@ AEGIS는 다음과 같은 시장을 대상으로 합니다.
 ## Disclaimer
 본 프로젝트는 연구 및 프로토타입 목적을 포함하며,  
 실제 상용 환경에서는 추가적인 보안·법적 검토가 필요합니다.
-
