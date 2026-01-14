@@ -12,7 +12,7 @@ AEGIS는 생성형 AI 시대에 급증하는 디지털 콘텐츠 위·변조 및
 
 그러나 기존 워터마킹 솔루션은 다음과 같은 한계를 가집니다.
 
-- **편집 취약성**: AI 편집 및 각종 공격(압축/노이즈/변형)에 취약
+- **공격 취약성**: AI 편집 및 각종 공격(압축/노이즈/변형)에 취약
 - **상용화 장벽**: 고비용 온프레미스 중심 구조, 느린 업데이트 주기
 
 AEGIS는 이러한 문제를 해결하기 위해 설계되었습니다.
@@ -23,19 +23,23 @@ AEGIS는 딥러닝 기반 워터마킹 및 위변조 탐지 SaaS로, 주요 기�
 
 ### 1. 원본 보호 (Watermark Embedding)
 - 사용자가 업로드한 이미지에 비가시성 워터마크 삽입
-<img width="318" height="399" alt="image" src="https://github.com/user-attachments/assets/a2e30d2f-6a84-4912-8517-9c82d4613b5c" />
+<img width="960" height="1205" alt="1" src="https://github.com/user-attachments/assets/75555aa8-752e-400d-af21-5fd1098cd212" />
+
 
 
 ### 2. 위변조 검증 (Tamper Detection & Localization)
 - 의심되는 이미지를 분석하여 위변조 여부 판정
   - 추출된 저작권 정보 제공
   - 조작된 영역 시각화
-<img width="223" height="385" alt="image" src="https://github.com/user-attachments/assets/b148dc6c-0b7f-489b-8e8c-0e49e6926a64" />
+<img width="960" height="1658" alt="2" src="https://github.com/user-attachments/assets/5209f920-0d3a-40a1-9278-660e7e92a3d7" />
+
+
 
 
 ### 3. 실시간 유출 및 위변조 모니터링
 - 위변조된 이미지 참지시 원본 소유자에게 알림
-<img width="285" height="402" alt="image" src="https://github.com/user-attachments/assets/b5d35bc3-f168-41b6-848f-176949f94af6" />
+<img width="960" height="1357" alt="3" src="https://github.com/user-attachments/assets/d72e5d32-cef3-4e31-b4b1-07977fd7b199" />
+
 
 
 ### + 타 서비스와 핵심 기능을 손쉽게 연결하는 API 지원
