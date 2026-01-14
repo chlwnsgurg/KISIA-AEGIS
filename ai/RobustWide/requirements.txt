@@ -1,0 +1,13 @@
+accelerate
+datasets
+diffusers
+einops
+kornia
+numpy
+omegaconf
+#opencv-python
+Pillow
+#torch
+#torchvision
+tqdm
+transformers

@@ -1,0 +1,1 @@
+python extract.py --ckpt_dir './checkpoints' --df_image_file './test_df_data/GadotFS_1800657065911081014_ed.png'
