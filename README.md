@@ -1,4 +1,3 @@
-# 딥러닝 기반 워터마킹 및 위변조 탐지 SaaS - 팀 AEGIS
 <p align="center">
 <img width="356" height="95" alt="image" src="https://github.com/user-attachments/assets/df015068-1eed-48ab-9c05-390fe4cc5712" />
 <p>
