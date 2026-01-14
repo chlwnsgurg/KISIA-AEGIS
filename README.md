@@ -4,15 +4,6 @@
 <p>
 
 
-**Here are some ideas to get you started:**
-
-🙋‍♀️ A short introduction - what is your organization all about?
-🌈 Contribution guidelines - how can the community get involved?
-👩‍💻 Useful resources - where can the community find your docs? Is there anything else the community should know?
-🍿 Fun facts - what does your team eat for breakfast?
-🧙 Remember, you can do mighty things with the power of [Markdown](https://docs.github.com/github/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax)
--->
-
 ## Overview
 AEGIS는 생성형 AI 시대에 급증하는 **디지털 콘텐츠 위·변조 및 저작권 침해 문제**를 해결하기 위해 설계된  
 **딥러닝 기반 이미지 워터마킹 및 위변조 검증 시스템**입니다.  
