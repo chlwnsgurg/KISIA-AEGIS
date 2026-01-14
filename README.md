@@ -63,17 +63,14 @@ AEGIS의 핵심 아이디어는 Deep Learning과 Error Correction Code(ECC)를 �
 ## Experimental Results
 
 ### 조작된 영역 시각화 성능 평가
-EditGuard 모델을 사용하였다.
-<img width="599" height="326" alt="Screenshot 2026-01-14 at 6 29 42 PM" src="https://github.com/user-attachments/assets/36efb2ac-3825-4f87-9c36-c057684c6131" />
-
+![Slide18](https://github.com/user-attachments/assets/a80cc645-bd86-4650-897b-f41bc4164a57)
+*EditGuard 모델을 사용하였다.
 
 ### 공격 시나리오에서의 강건성 평가
-RobustWide 모델을 사용하였다.
-<img width="643" height="308" alt="Screenshot 2026-01-14 at 6 30 30 PM" src="https://github.com/user-attachments/assets/7698d190-e905-411d-8796-a9f19f0fbcac" />
+![Slide19](https://github.com/user-attachments/assets/2d3c6ef6-ec90-4140-9fbc-116cbd73f4f8)
+*RobustWide 모델을 사용하였다.
 
 ---
-
-
 ## Future Work
 
 - 워터마킹 모델에 대한 지속적 업데이트
